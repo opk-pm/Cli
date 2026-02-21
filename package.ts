@@ -38,13 +38,16 @@ export default definePackage({
   ],
 
   type: 'module',
-  module: 'src/cli.ts',
+  main: 'dist/cli.js',
+  module: 'dist/cli.js',
   bin: {
-    opk: './index.ts',
+    opk: './dist/cli.js',
   },
+  files: ['dist'],
   scriptPresets: ['typescript', 'prettier'],
   scripts: {
-    dev: 'bun run index.ts help',
+    build: 'bun run build.ts',
+    dev: 'bun run src/cli.ts help',
   },
 
   devDependencies: {
