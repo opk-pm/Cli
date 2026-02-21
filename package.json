@@ -1,0 +1,38 @@
+{
+  "name": "opk",
+  "version": "0.1.0",
+  "description": "The universal package manager for JS/TS.",
+  "keywords": [
+    "opk",
+    "typescript",
+    "package-json",
+    "npm",
+    "bun",
+    "monorepo-tooling",
+    "nodejs"
+  ],
+  "license": "Apache-2.0",
+  "type": "module",
+  "module": "src/cli.ts",
+  "bin": {
+    "opk": "./index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev": "bun run index.ts help"
+  },
+  "dependencies": {
+    "@opk/ts-pkg": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": false
+}
