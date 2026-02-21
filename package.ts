@@ -21,11 +21,13 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
           $$$$$$$$$$$$$$             
 `
 
+export const cmdName: string = 'opk'
+
 export default definePackage({
   pm: BunPm,
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.1.0',
+  version: '0.1.1',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   keywords: [
