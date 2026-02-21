@@ -16,6 +16,13 @@ It focuses on developer experience, deterministic installs, and ecosystem intero
 
 Opk enables developers to manage packages once and run them anywhere.
 
+## Installation
+Opk CLI is an npm package that should be installed globally.
+
+```shell
+npm i -g opk
+```
+
 ## Commands
 
 - `opk init` - Prompt for project metadata, write `package.ts`, run ts-pkg sync+generate

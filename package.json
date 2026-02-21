@@ -12,6 +12,7 @@
     "nodejs"
   ],
   "license": "Apache-2.0",
+  "repository": "https://github.com/opk-pm/Cli.git",
   "type": "module",
   "main": "dist/cli.js",
   "module": "dist/cli.js",
