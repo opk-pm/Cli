@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
@@ -36,8 +37,44 @@ export async function syncAndGenerate(
     packageJsonPath,
     quiet: true,
   })
-  const config = await loadConfig(configPath)
+  let config = await loadConfig(configPath)
+  if (await shouldFormatSyncedPackageTs(config)) {
+    await runPrettierWritePackageTs()
+    config = await loadConfig(configPath)
+  }
   await writePackageJson(config, { outputPath: packageJsonPath })
+}
+
+async function shouldFormatSyncedPackageTs(config: PackageConfig): Promise<boolean> {
+  if (hasPrettierInScripts(config.scripts)) {
+    return true
+  }
+  return hasPrettierRcInProjectRoot()
+}
+
+function hasPrettierInScripts(scripts: Record<string, string> | undefined): boolean {
+  if (!scripts) {
+    return false
+  }
+  const keys = Object.keys(scripts).some(key => key.toLowerCase().includes('prettier'))
+  const values = Object.values(scripts).some(value =>
+    value.toLowerCase().includes('prettier')
+  )
+  return keys || values
+}
+
+async function hasPrettierRcInProjectRoot(): Promise<boolean> {
+  const entries = await readdir(process.cwd())
+  return entries.some(entry => entry.startsWith('.prettierrc'))
+}
+
+async function runPrettierWritePackageTs(): Promise<void> {
+  const proc = Bun.spawn(['sh', '-lc', 'prettier --write package.ts'], {
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
+  })
+  await proc.exited
 }
 
 export async function detectPmSelection(): Promise<PmSelection> {

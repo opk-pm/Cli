@@ -52,13 +52,16 @@ export default definePackage({
   description: '${escapeSingleQuotes(answers.description)}',
   license: '${escapeSingleQuotes(answers.license)}',
   type: '${answers.moduleType}',
+  dependencies: {
+    '@opk/ts-pkg': '^0.5.0',
+  },
   private: false,
 })
 `
 
   await writeFile(packageTsPath, content)
   console.log(
-    `${paint('Initialized', C.pink)} package.ts with ${paint(pmSelection.manager.name, C.purple)}`
+    `\n${paint('Initialized', C.pink)} package.ts with ${paint(pmSelection.manager.name, C.purple)}`
   )
 
   const config = await loadConfig('package.ts')
@@ -66,4 +69,7 @@ export default definePackage({
     outputPath: resolve(process.cwd(), 'package.json'),
   })
   await syncAndGenerate('package.ts', 'package.json')
+
+  console.log(`\nRun ${paint('bun i', C.purple)} to install dependencies`)
+  console.log(`Or, edit your ${paint('package.ts', C.purple)} to use a different PM`)
 }
