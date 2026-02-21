@@ -20,7 +20,7 @@ Opk enables developers to manage packages once and run them anywhere.
 Opk CLI is an npm package that should be installed globally.
 
 ```shell
-npm i -g opk
+npm i -g opk-pm
 ```
 
 ## Commands

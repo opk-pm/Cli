@@ -23,7 +23,7 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
 
 export default definePackage({
   pm: BunPm,
-  name: 'opk',
+  name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
   version: '0.1.0',
   license: 'Apache-2.0',
