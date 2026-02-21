@@ -17,6 +17,7 @@ It focuses on developer experience, deterministic installs, and ecosystem intero
 Opk enables developers to manage packages once and run them anywhere.
 
 ## Installation
+
 Opk CLI is an npm package that should be installed globally.
 
 ```shell
@@ -25,18 +26,30 @@ npm i -g opk-pm
 
 ## Commands
 
-- `opk init` - Prompt for project metadata, write `package.ts`, run ts-pkg sync+generate
+#### Package Management:
+
 - `opk add <pkg...>` - Add packages via selected package manager, then sync+generate
 - `opk remove <pkg...>` - Remove packages via selected package manager, then sync+generate
 - `opk install` - Install via selected package manager, then sync+generate
 - `opk update [pkg...]` - Update via selected package manager, then sync+generate
 - `opk audit` - Audit via selected package manager, then sync+generate
+
+#### Execution:
+
 - `opk run <script> [args...]` - Run scripts via selected package manager
-- `opk exec <cmd> [args...]` - Execute binaries via selected package manager
-- `opk list` - Show dependencies in a native opk UI
-- `opk info <pkg>` - Show package info in a native opk UI
+- `opx <cmd> [args...]` - Execute binaries via selected package manager
+
+#### Project Management:
+
+- `opk init` - Prompt for project metadata, write `package.ts`, run ts-pkg sync+generate
+- `opk migrate` - Migrate from an existing `package.json` to `package.ts`, then sync+generate
 - `opk generate [configPath] [packageJsonPath]` - Generate `package.json` from ts-pkg config
 - `opk sync [configPath] [packageJsonPath]` - Sync and regenerate using ts-pkg APIs
+
+#### Info:
+
+- `opk list` - Show dependencies in a native opk UI
+- `opk info <pkg>` - Show package info in a native opk UI
 
 ## package.ts
 

@@ -45,6 +45,7 @@ export default definePackage({
   module: 'dist/cli.js',
   bin: {
     opk: './dist/cli.js',
+    opx: './dist/opx.js',
   },
   files: ['dist'],
   scriptPresets: ['typescript', 'prettier'],

@@ -13,6 +13,7 @@ import {
 } from '@opk/ts-pkg'
 import { exists } from './fs'
 import type { PmSelection } from '../types'
+import { C, paint } from '../ui/colors.ts'
 
 export async function loadConfig(
   configPath: string = 'package.ts'
@@ -38,25 +39,31 @@ export async function syncAndGenerate(
     quiet: true,
   })
   let config = await loadConfig(configPath)
-  if (await shouldFormatSyncedPackageTs(config)) {
+  if (await shouldFormatPackageTs(config.scripts)) {
     await runPrettierWritePackageTs()
     config = await loadConfig(configPath)
   }
   await writePackageJson(config, { outputPath: packageJsonPath })
 }
 
-async function shouldFormatSyncedPackageTs(config: PackageConfig): Promise<boolean> {
-  if (hasPrettierInScripts(config.scripts)) {
+export async function shouldFormatPackageTs(
+  scripts: Record<string, string> | undefined
+): Promise<boolean> {
+  if (hasPrettierInScripts(scripts)) {
     return true
   }
   return hasPrettierRcInProjectRoot()
 }
 
-function hasPrettierInScripts(scripts: Record<string, string> | undefined): boolean {
+function hasPrettierInScripts(
+  scripts: Record<string, string> | undefined
+): boolean {
   if (!scripts) {
     return false
   }
-  const keys = Object.keys(scripts).some(key => key.toLowerCase().includes('prettier'))
+  const keys = Object.keys(scripts).some(key =>
+    key.toLowerCase().includes('prettier')
+  )
   const values = Object.values(scripts).some(value =>
     value.toLowerCase().includes('prettier')
   )
@@ -68,7 +75,8 @@ async function hasPrettierRcInProjectRoot(): Promise<boolean> {
   return entries.some(entry => entry.startsWith('.prettierrc'))
 }
 
-async function runPrettierWritePackageTs(): Promise<void> {
+export async function runPrettierWritePackageTs(): Promise<void> {
+  console.log(paint('Formatted: ', C.purple))
   const proc = Bun.spawn(['sh', '-lc', 'prettier --write package.ts'], {
     stdin: 'inherit',
     stdout: 'inherit',
@@ -90,12 +98,13 @@ export async function detectPmSelection(): Promise<PmSelection> {
       select: { importName: 'YarnPm', manager: YarnPm },
     },
     {
-      lockfile: 'package-lock.json',
-      select: { importName: 'NpmPm', manager: NpmPm },
-    },
-    {
       lockfile: 'deno.lock',
       select: { importName: 'DenoPm', manager: DenoPm },
+    },
+    // npm lockfile comes last so non-npm lockfiles win when both are present.
+    {
+      lockfile: 'package-lock.json',
+      select: { importName: 'NpmPm', manager: NpmPm },
     },
   ]
 

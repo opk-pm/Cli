@@ -17,7 +17,8 @@
   "main": "dist/cli.js",
   "module": "dist/cli.js",
   "bin": {
-    "opk": "./dist/cli.js"
+    "opk": "./dist/cli.js",
+    "opx": "./dist/opx.js"
   },
   "files": [
     "dist"

@@ -71,5 +71,7 @@ export default definePackage({
   await syncAndGenerate('package.ts', 'package.json')
 
   console.log(`\nRun ${paint('bun i', C.purple)} to install dependencies`)
-  console.log(`Or, edit your ${paint('package.ts', C.purple)} to use a different PM`)
+  console.log(
+    `Or, edit your ${paint('package.ts', C.purple)} to use a different PM`
+  )
 }

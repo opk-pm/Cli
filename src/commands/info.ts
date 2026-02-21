@@ -72,7 +72,8 @@ function printDist(versionData: NpmVersionData): void {
   if (!dist) return
   console.log('')
   console.log(paint('dist', C.purple))
-  if (dist.tarball) console.log(` ${paint('·', C.pink)} tarball: ${dist.tarball}`)
+  if (dist.tarball)
+    console.log(` ${paint('·', C.pink)} tarball: ${dist.tarball}`)
   if (dist.shasum) console.log(` ${paint('·', C.pink)} shasum: ${dist.shasum}`)
   if (dist.integrity)
     console.log(` ${paint('·', C.pink)} integrity: ${dist.integrity}`)
