@@ -27,7 +27,7 @@ export default definePackage({
   pm: BunPm,
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.3.0',
+  version: '0.4.0',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   keywords: [
