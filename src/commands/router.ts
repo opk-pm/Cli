@@ -2,6 +2,7 @@ import { writePackageJson } from '@opk/ts-pkg'
 import { loadConfig, syncAndGenerate } from '../core/config'
 import { runPmCommand, runPmOnly } from '../core/shell'
 import { runInit } from './init'
+import { runInfo } from './info'
 import { runList } from '../ui/list'
 import { printHelp } from '../ui/help'
 
@@ -20,6 +21,15 @@ export async function runCli(args: string[]): Promise<void> {
 
   if (command === 'list') {
     await runList(args[1] ?? 'package.json')
+    return
+  }
+
+  if (command === 'info') {
+    const packageName = args[1]
+    if (!packageName) {
+      throw new Error('opk info requires a package name')
+    }
+    await runInfo(packageName)
     return
   }
 

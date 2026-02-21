@@ -18,6 +18,7 @@ Usage:
   ${paint(cmdName, C.dim)} run <pkg script> [args...]
   ${paint(cmdName, C.dim)} exec <cmd> [args...]
   ${paint(cmdName, C.dim)} list
+  ${paint(cmdName, C.dim)} info <pkg>
   ${paint(cmdName, C.dim)} sync [configPath] [packageJsonPath]
   ${paint(cmdName, C.dim)} generate [configPath] [packageJsonPath]
   ${paint(cmdName, C.dim)} help

@@ -34,6 +34,7 @@ npm i -g opk-pm
 - `opk run <script> [args...]` - Run scripts via selected package manager
 - `opk exec <cmd> [args...]` - Execute binaries via selected package manager
 - `opk list` - Show dependencies in a native opk UI
+- `opk info <pkg>` - Show package info in a native opk UI
 - `opk generate [configPath] [packageJsonPath]` - Generate `package.json` from ts-pkg config
 - `opk sync [configPath] [packageJsonPath]` - Sync and regenerate using ts-pkg APIs
 
