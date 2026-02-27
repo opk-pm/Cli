@@ -1,6 +1,6 @@
 {
   "name": "opk-pm",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The universal package manager for JS/TS.",
   "keywords": [
     "opk",
@@ -8,9 +8,13 @@
     "package-json",
     "npm",
     "bun",
+    "deno",
+    "pnpm",
+    "yarn",
     "monorepo-tooling",
     "nodejs"
   ],
+  "homepage": "https://opk.a35.dev/",
   "license": "Apache-2.0",
   "repository": "https://github.com/opk-pm/Cli.git",
   "type": "module",

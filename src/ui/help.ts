@@ -1,15 +1,15 @@
 import { C, paint } from './colors'
-import pkg, { logo, cmdName } from '../../package'
+import pkg, { Logo, CmdName } from '../../package'
 
 // Formatted Elements
 const Bullet: string = paint('∙', C.dim)
-const Command: string = paint(cmdName, C.dim)
+const Command: string = paint(CmdName, C.dim)
 
 export function printHelp(): void {
   console.log(
     `
-${paint(logo, C.bold + C.purple)}
-${paint(cmdName, C.bold + C.pink)} ${paint('- ' + pkg.description, C.lavender)}
+${paint(Logo, C.bold + C.purple)}
+${paint(CmdName, C.bold + C.pink)} ${paint('- ' + pkg.description, C.lavender)}
 ${paint('Version: ' + pkg.version, C.dim)}
 
 ${paint('Usage:', C.bold + C.purple)}

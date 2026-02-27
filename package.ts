@@ -1,6 +1,6 @@
 import { BunPm, definePackage } from '@opk/ts-pkg'
 
-export const logo: string = `
+export const Logo: string = `
           $$$$$$$$$$$$$$             
        $$$$$$$$$$$$$$$$$$$$          
      $$$$$$$$$$     $$$$$$$$$        
@@ -21,21 +21,31 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
           $$$$$$$$$$$$$$             
 `
 
-export const cmdName: string = 'opk'
+export const CmdName: string = 'opk'
+
+export const WhatsNew: string = `
+In Opk 0.4.1, you can now run the opk info command on your current project directory!
+This allows for a quick overview of your project's metadata and deps.
+This update also includes release notes, like these, being printed on first run of a new version.
+`
 
 export default definePackage({
   pm: BunPm,
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.4.0',
+  version: '0.4.1',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
+  homepage: 'https://opk.a35.dev/',
   keywords: [
     'opk',
     'typescript',
     'package-json',
     'npm',
     'bun',
+    'deno',
+    'pnpm',
+    'yarn',
     'monorepo-tooling',
     'nodejs',
   ],

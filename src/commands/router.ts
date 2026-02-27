@@ -44,7 +44,8 @@ export async function runCli(args: string[]): Promise<void> {
   if (command === 'info') {
     const packageName = args[1]
     if (!packageName) {
-      throw new Error('opk info requires a package name')
+      await runInfo('', true)
+      return
     }
     await runInfo(packageName)
     return

@@ -1,4 +1,8 @@
 import { C, paint } from '../ui/colors'
+import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 interface NpmMaintainer {
   name: string
@@ -106,19 +110,72 @@ function printMaintainers(
   }
 }
 
-export async function runInfo(packageName: string): Promise<void> {
+export async function runInfo(
+  packageName: string,
+  useSelf: boolean = false
+): Promise<void> {
+  if (useSelf) {
+    const cwd = process.cwd()
+    const tsPath = resolve(cwd, 'package.ts')
+    const jsonPath = resolve(cwd, 'package.json')
+
+    let data: any
+
+    if (existsSync(tsPath)) {
+      const mod = await import(pathToFileURL(tsPath).href)
+      data = mod.default ?? mod
+    } else if (existsSync(jsonPath)) {
+      const raw = await readFile(jsonPath, 'utf8')
+      data = JSON.parse(raw)
+    } else {
+      throw new Error(
+        'No package.ts or package.json found in current directory'
+      )
+    }
+
+    return printLocalInfo(data)
+  }
+
   const url = `https://registry.npmjs.org/${encodeURIComponent(packageName)}`
-  const response = await fetch(url, { headers: { Accept: 'application/json' } })
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+  })
 
   if (!response.ok) {
     throw new Error(`Failed to fetch package info for ${packageName}`)
   }
 
   const data = (await response.json()) as NpmInfo
+  return printRemoteInfo(data)
+}
+
+function printLocalInfo(data: any) {
+  const dependencies = data.dependencies ?? {}
+  const depCount = Object.keys(dependencies).length
+  const license = data.license ?? 'unknown'
+  const description = data.description ?? ''
+  const link = data.homepage ?? parseRepositoryUrl(data.repository)
+  const keywords = data.keywords ?? []
+  const version = data.version ?? '0.0.0'
+
+  console.log(
+    `${paint(`${data.name}@${version}`, C.bold + C.pink)} ${paint('|', C.dim)} ${paint(license, C.lavender)} ${paint('|', C.dim)} deps: ${depCount}`
+  )
+
+  if (description) console.log(description)
+  if (link) console.log(paint(link, C.purple))
+  if (keywords.length > 0) {
+    console.log(`${paint('keywords:', C.purple)} ${keywords.join(', ')}`)
+  }
+
+  printDeps(dependencies)
+}
+
+function printRemoteInfo(data: NpmInfo) {
   const tags = data['dist-tags'] ?? {}
   const latest = tags.latest
   if (!latest || !data.versions?.[latest]) {
-    throw new Error(`No latest version found for ${packageName}`)
+    throw new Error(`No latest version found for ${data.name}`)
   }
 
   const latestData = data.versions[latest]
@@ -134,6 +191,7 @@ export async function runInfo(packageName: string): Promise<void> {
   console.log(
     `${paint(`${data.name}@${latest}`, C.bold + C.pink)} ${paint('|', C.dim)} ${paint(license, C.lavender)} ${paint('|', C.dim)} deps: ${depCount} ${paint('|', C.dim)} versions: ${versionCount}`
   )
+
   if (description) console.log(description)
   if (link) console.log(paint(link, C.purple))
   if (keywords.length > 0) {
