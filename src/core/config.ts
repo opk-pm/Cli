@@ -1,5 +1,5 @@
-import { readdir } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { copyFile, readdir, unlink } from 'node:fs/promises'
+import { basename, dirname, extname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
   BunPm,
@@ -19,14 +19,27 @@ export async function loadConfig(
   configPath: string = 'package.ts'
 ): Promise<PackageConfig> {
   const absolute = resolve(process.cwd(), configPath)
-  const mod = await import(pathToFileURL(absolute).href)
-  const config = (mod.default ?? mod) as PackageConfig
-  if (!config.pm) {
-    throw new Error(
-      `Missing required pm field in ${configPath}. Import a PM from @opk/ts-pkg and assign pm`
-    )
+  const extension = extname(absolute) || '.ts'
+  const baseName = basename(absolute, extension)
+  const nonce = `${process.pid}_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  const tempPath = resolve(
+    dirname(absolute),
+    `.${baseName}.opk-${nonce}${extension}`
+  )
+  await copyFile(absolute, tempPath)
+
+  try {
+    const mod = await import(pathToFileURL(tempPath).href)
+    const config = (mod.default ?? mod) as PackageConfig
+    if (!config.pm) {
+      throw new Error(
+        `Missing required pm field in ${configPath}. Import a PM from @opk/ts-pkg and assign pm`
+      )
+    }
+    return config
+  } finally {
+    await unlink(tempPath).catch(() => undefined)
   }
-  return config
 }
 
 export async function syncAndGenerate(

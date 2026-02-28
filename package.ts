@@ -1,4 +1,4 @@
-import { BunPm, definePackage } from '@opk/ts-pkg'
+import { BunPm, definePackage, NodePm } from '@opk/ts-pkg'
 
 export const Logo: string = `
           $$$$$$$$$$$$$$             
@@ -24,16 +24,20 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
 export const CmdName: string = 'opk'
 
 export const WhatsNew: string = `
-In Opk 0.4.1, you can now run the opk info command on your current project directory!
-This allows for a quick overview of your project's metadata and deps.
-This update also includes release notes, like these, being printed on first run of a new version.
+Opk 0.5 now has useful flags for package management, such as lockfile only installs.
+Furthermore, you can now keep other lockfiles up to date using the altPms field in package.ts.
+
+Finally, Opk 0.5 fixes some critical issues:
+  ∙ Package.json no longer de-syncs after installs
+  ∙ New aliases for common commands added for better compat
 `
 
 export default definePackage({
   pm: BunPm,
+  altPms: [NodePm],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.4.1',
+  version: '0.5.0',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   homepage: 'https://opk.a35.dev/',
@@ -66,12 +70,10 @@ export default definePackage({
 
   devDependencies: {
     '@types/bun': 'latest',
-  },
-  peerDependencies: {
-    typescript: '^5',
+    typescript: '6.0.0-beta',
   },
   dependencies: {
-    '@opk/ts-pkg': '^0.5.0',
+    '@opk/ts-pkg': '^0.6.0',
   },
 
   private: false,

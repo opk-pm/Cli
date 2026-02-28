@@ -11,6 +11,7 @@ It focuses on developer experience, deterministic installs, and ecosystem intero
 - Unified package management across multiple ecosystems
 - Consistent dependency and script workflows
 - Cross-manager compatibility and migration
+  - NEW in 0.5: Keep multiple package managers in sync
 - Type-safe configuration and extensibility
 - Reproducible and deterministic environments
 
@@ -50,6 +51,24 @@ npm i -g opk-pm
 
 - `opk list` - Show dependencies in a native opk UI
 - `opk info <pkg>` - Show package info in a native opk UI
+
+### Shared PM flags
+
+These flags are mapped by Opk to the selected package manager's native flag equivalents:
+
+- `--lock-only`, `--frozen-lockfile` (for `opk install`, `opk update`)
+- `--ignore-scripts`, `--ignore-engines`, `--ignore-optional` (for `opk add|install|update`)
+- `--ignore-workspace-root-check`, `--ignore-pnp` (for `opk add|install|update`)
+- `--production` / `--prod`, `--dev`, `--peer`, `--optional` (for `opk add|install|update`)
+- `--verbose`, `--silent` (for `opk add|remove|install|update|audit`)
+
+Examples:
+
+```shell
+opk add react --dev --ignore-scripts
+opk install --frozen-lockfile --silent
+opk update --lock-only --verbose
+```
 
 ## package.ts
 

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path'
-import { writePackageJson } from '@opk/ts-pkg'
+import { writePackageJson, type PackageManager } from '@opk/ts-pkg'
 import { detectPmSelection, loadConfig, syncAndGenerate } from '../core/config'
 import { exists } from '../core/fs'
 import { runPmCommand, runPmOnly } from '../core/shell'
@@ -9,6 +9,218 @@ import { runMigrate } from './migrate'
 import { runList } from '../ui/list'
 import { C, paint } from '../ui/colors'
 import { printHelp } from '../ui/help'
+
+type PmCommand =
+  | 'add'
+  | 'remove'
+  | 'rm'
+  | 'un'
+  | 'install'
+  | 'i'
+  | 'update'
+  | 'up'
+  | 'audit'
+type FlagGroup = 'lock' | 'scope' | 'output'
+
+interface PmFlagRule {
+  id: string
+  names: string[]
+  commands: ReadonlySet<PmCommand>
+  group?: FlagGroup
+  resolve: (pm: PackageManager) => string
+}
+
+const PmCommands = new Set<PmCommand>([
+  'add',
+  'remove',
+  'rm',
+  'un',
+  'install',
+  'i',
+  'update',
+  'up',
+  'audit',
+])
+const AddInstallUpdateCommands = new Set<PmCommand>([
+  'add',
+  'install',
+  'i',
+  'update',
+  'up',
+])
+const InstallUpdateCommands = new Set<PmCommand>(['install', 'update', 'up'])
+
+const PmFlagRules: PmFlagRule[] = [
+  {
+    id: 'lock-only',
+    names: ['--lock-only'],
+    commands: InstallUpdateCommands,
+    group: 'lock',
+    resolve: pm => pm.lockFlags.lockOnly,
+  },
+  {
+    id: 'frozen-lockfile',
+    names: ['--frozen-lockfile', '--frozen-lock-file'],
+    commands: InstallUpdateCommands,
+    group: 'lock',
+    resolve: pm => pm.lockFlags.frozenLockFile,
+  },
+  {
+    id: 'ignore-scripts',
+    names: ['--ignore-scripts'],
+    commands: AddInstallUpdateCommands,
+    resolve: pm => pm.ignoreFlags.ignoreScripts,
+  },
+  {
+    id: 'ignore-engines',
+    names: ['--ignore-engines'],
+    commands: AddInstallUpdateCommands,
+    resolve: pm => pm.ignoreFlags.ignoreEngines,
+  },
+  {
+    id: 'ignore-optional',
+    names: ['--ignore-optional'],
+    commands: AddInstallUpdateCommands,
+    resolve: pm => pm.ignoreFlags.ignoreOptional,
+  },
+  {
+    id: 'ignore-workspace-root-check',
+    names: ['--ignore-workspace-root-check'],
+    commands: AddInstallUpdateCommands,
+    resolve: pm => pm.ignoreFlags.ignoreWorkspaceRootCheck,
+  },
+  {
+    id: 'ignore-pnp',
+    names: ['--ignore-pnp'],
+    commands: AddInstallUpdateCommands,
+    resolve: pm => pm.ignoreFlags.ignorePnP,
+  },
+  {
+    id: 'production',
+    names: ['--production', '--prod'],
+    commands: AddInstallUpdateCommands,
+    group: 'scope',
+    resolve: pm => pm.scopeFlags.production,
+  },
+  {
+    id: 'dev',
+    names: ['--dev'],
+    commands: AddInstallUpdateCommands,
+    group: 'scope',
+    resolve: pm => pm.scopeFlags.dev,
+  },
+  {
+    id: 'peer',
+    names: ['--peer'],
+    commands: AddInstallUpdateCommands,
+    group: 'scope',
+    resolve: pm => pm.scopeFlags.peer,
+  },
+  {
+    id: 'optional',
+    names: ['--optional'],
+    commands: AddInstallUpdateCommands,
+    group: 'scope',
+    resolve: pm => pm.scopeFlags.optional,
+  },
+  {
+    id: 'verbose',
+    names: ['--verbose'],
+    commands: PmCommands,
+    group: 'output',
+    resolve: pm => pm.outputFlags.verbose,
+  },
+  {
+    id: 'silent',
+    names: ['--silent'],
+    commands: PmCommands,
+    group: 'output',
+    resolve: pm => pm.outputFlags.silent,
+  },
+]
+
+const PmFlagRuleByName = new Map<string, PmFlagRule>()
+for (const rule of PmFlagRules) {
+  for (const name of rule.names) {
+    PmFlagRuleByName.set(name, rule)
+  }
+}
+
+function mapPmFlags(
+  command: PmCommand,
+  args: string[],
+  pm: PackageManager
+): string[] {
+  const mapped: string[] = []
+  const passthrough: string[] = []
+  const seenRules = new Set<string>()
+  const groups = new Map<FlagGroup, string>()
+  let parseFlags = true
+
+  for (const arg of args) {
+    if (!parseFlags) {
+      passthrough.push(arg)
+      continue
+    }
+    if (arg === '--') {
+      parseFlags = false
+      passthrough.push(arg)
+      continue
+    }
+    if (!arg.startsWith('-') || arg.includes('=')) {
+      passthrough.push(arg)
+      continue
+    }
+
+    const rule = PmFlagRuleByName.get(arg)
+    if (!rule) {
+      passthrough.push(arg)
+      continue
+    }
+    if (!rule.commands.has(command)) {
+      const supportedCommands = Array.from(rule.commands)
+        .map(pmCommand => `opk ${pmCommand}`)
+        .join(', ')
+      throw new Error(`${arg} can only be used with ${supportedCommands}`)
+    }
+
+    if (rule.group) {
+      const selectedRule = groups.get(rule.group)
+      if (selectedRule && selectedRule !== rule.id) {
+        throw new Error(`Use only one ${rule.group} flag at a time`)
+      }
+      groups.set(rule.group, rule.id)
+    }
+
+    if (!seenRules.has(rule.id)) {
+      const pmFlag = rule.resolve(pm).trim()
+      if (!pmFlag) {
+        throw new Error(`${arg} is not supported by ${pm.name}`)
+      }
+      mapped.push(pmFlag)
+      seenRules.add(rule.id)
+    }
+  }
+
+  return [...mapped, ...passthrough]
+}
+
+function hasPositionalArg(args: string[]): boolean {
+  let hasSeparator = false
+  for (const arg of args) {
+    if (hasSeparator) {
+      return true
+    }
+    if (arg === '--') {
+      hasSeparator = true
+      continue
+    }
+    if (!arg.startsWith('-')) {
+      return true
+    }
+  }
+  return false
+}
 
 export async function runCli(args: string[]): Promise<void> {
   const command = args[0] ?? 'generate'
@@ -80,33 +292,43 @@ export async function runCli(args: string[]): Promise<void> {
     return
   }
 
-  const pmCommands = new Set(['add', 'remove', 'install', 'update', 'audit'])
-  if (pmCommands.has(command)) {
+  if (PmCommands.has(command as PmCommand)) {
+    const pmCommand = command as PmCommand
     const pm = inferenceMode
       ? (await detectPmSelection()).manager
       : (await loadConfig('package.ts')).pm
-    const packages = args.slice(1)
-    if ((command === 'add' || command === 'remove') && packages.length === 0) {
-      throw new Error(`opk ${command} requires at least one package`)
+    const commandArgs = args.slice(1)
+    if (
+      (pmCommand === 'add' || pmCommand === 'remove') &&
+      !hasPositionalArg(commandArgs)
+    ) {
+      throw new Error(`opk ${pmCommand} requires at least one package`)
     }
+    const mappedArgs = mapPmFlags(pmCommand, commandArgs, pm)
 
     const selected =
-      command === 'add'
+      pmCommand === 'add'
         ? pm.add
-        : command === 'remove'
+        : pmCommand === 'remove' || pmCommand === 'rm' || pmCommand === 'un'
           ? pm.remove
-          : command === 'install'
+          : pmCommand === 'install' || pmCommand === 'i'
             ? pm.install
-            : command === 'update'
+            : pmCommand === 'update' || pmCommand === 'up'
               ? pm.update
               : pm.audit
 
     if (inferenceMode) {
-      await runPmOnly(selected, packages)
+      await runPmOnly(selected, mappedArgs)
       return
     }
 
-    await runPmCommand(selected, packages)
+    await runPmCommand(
+      selected,
+      mappedArgs,
+      'package.ts',
+      'package.json',
+      pmCommand !== 'audit'
+    )
     return
   }
 

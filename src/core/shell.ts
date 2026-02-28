@@ -1,4 +1,4 @@
-import { syncAndGenerate } from './config'
+import { loadConfig, syncAndGenerate } from './config'
 
 function shellEscape(arg: string): string {
   return `'${arg.replace(/'/g, `'\\''`)}'`
@@ -28,7 +28,8 @@ export async function runPmCommand(
   base: string,
   args: string[],
   configPath: string = 'package.ts',
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
+  syncAltPms: boolean = false
 ): Promise<void> {
   const parts = splitBaseCommand(base)
   if (parts.length === 0) {
@@ -38,6 +39,9 @@ export async function runPmCommand(
   const [cmd, ...baseArgs] = parts
   await runCommand(cmd!, [...baseArgs, ...args])
   await syncAndGenerate(configPath, packageJsonPath)
+  if (syncAltPms) {
+    await syncAltPmLockFiles(configPath)
+  }
 }
 
 export async function runPmOnly(base: string, args: string[]): Promise<void> {
@@ -47,4 +51,17 @@ export async function runPmOnly(base: string, args: string[]): Promise<void> {
   }
   const [cmd, ...baseArgs] = parts
   await runCommand(cmd!, [...baseArgs, ...args])
+}
+
+async function syncAltPmLockFiles(configPath: string): Promise<void> {
+  const config = await loadConfig(configPath)
+  const altPms = config.altPms ?? []
+
+  for (const altPm of altPms) {
+    const lockOnlyArgs = splitBaseCommand(altPm.lockFlags.lockOnly)
+    if (lockOnlyArgs.length === 0) {
+      throw new Error(`altPms entry ${altPm.name} is missing a lock-only flag`)
+    }
+    await runPmOnly(altPm.install, lockOnlyArgs)
+  }
 }

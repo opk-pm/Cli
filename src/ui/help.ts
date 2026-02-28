@@ -36,6 +36,13 @@ ${paint('Usage:', C.bold + C.purple)}
   ${Command} list
   ${Command} info <pkg>
 
+ ${paint('Shared PM Flags:', C.bold + C.purple)}
+  ${Bullet} ${paint('--lock-only', C.dim)}, ${paint('--frozen-lockfile', C.dim)} (install, update)
+  ${Bullet} ${paint('--ignore-scripts', C.dim)}, ${paint('--ignore-engines', C.dim)}, ${paint('--ignore-optional', C.dim)} (add, install, update)
+  ${Bullet} ${paint('--ignore-workspace-root-check', C.dim)}, ${paint('--ignore-pnp', C.dim)} (add, install, update)
+  ${Bullet} ${paint('--production', C.dim)} / ${paint('--prod', C.dim)}, ${paint('--dev', C.dim)}, ${paint('--peer', C.dim)}, ${paint('--optional', C.dim)} (add, install, update)
+  ${Bullet} ${paint('--verbose', C.dim)}, ${paint('--silent', C.dim)} (add, remove, install, update, audit)
+
 ${paint('Notes:', C.bold + C.purple)}
   ${Bullet} PM-backed commands use the package manager selected in package.ts (pm field)
   ${Bullet} If there's no package.ts, PM-backed commands will try to detect the PM based on lockfiles
