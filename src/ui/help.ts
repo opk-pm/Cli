@@ -30,6 +30,7 @@ ${paint('Usage:', C.bold + C.purple)}
   ${Command} migrate
   ${Command} sync [configPath] [packageJsonPath]
   ${Command} generate [configPath] [packageJsonPath]
+  ${Command} gui [--port <port>]
   
  Info:
   ${Command} help

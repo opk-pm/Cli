@@ -2,5 +2,9 @@ node_modules
 .idea
 .vscode
 bun.lock
+package-lock.json
+package.json
 .prettierignore
 dist
+
+gui/public

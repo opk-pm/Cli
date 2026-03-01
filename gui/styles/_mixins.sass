@@ -1,0 +1,23 @@
+@use './tokens' as *
+
+=card-surface
+  background: linear-gradient(180deg, $bg-panel 0%, $bg-panel-soft 100%)
+  border: 1px solid $line-soft
+  border-radius: $radius-lg
+  box-shadow: $shadow-md
+
+=soft-scrollbar
+  scrollbar-width: thin
+  scrollbar-color: rgba(170, 190, 255, 0.35) transparent
+  &::-webkit-scrollbar
+    width: 10px
+    height: 10px
+  &::-webkit-scrollbar-thumb
+    background: rgba(170, 190, 255, 0.26)
+    border-radius: 999px
+  &::-webkit-scrollbar-track
+    background: transparent
+
+=focus-ring
+  outline: 2px solid rgb(160 112 255 / 0.75)
+  outline-offset: 2px

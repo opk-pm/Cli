@@ -1,0 +1,127 @@
+@use './tokens' as *
+@use './mixins' as *
+
+.panel
+  +card-surface
+  padding: 14px
+
+.panel-title
+  display: flex
+  align-items: center
+  gap: 8px
+  margin: 0 0 10px
+  font-size: 0.96rem
+  color: $text-secondary
+
+.btn
+  border: 1px solid transparent
+  border-radius: $radius-md
+  background: rgba(255, 255, 255, 0.03)
+  color: $text-primary
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  gap: 8px
+  padding: 0.5rem 0.75rem
+  cursor: pointer
+  transition: 0.2s ease
+
+  &:hover
+    transform: translateY(-1px)
+
+  &:focus-visible
+    +focus-ring
+
+  &:disabled
+    opacity: 0.5
+    cursor: not-allowed
+    transform: none
+
+  svg
+    width: 1rem
+    height: 1rem
+
+.btn--primary
+  border-color: rgba(121, 172, 255, 0.35)
+  background: linear-gradient(180deg, $accent 0%, $accent-strong 100%)
+  color: #061027
+
+.btn--ghost
+  border-color: $line-soft
+  background: rgba(255, 255, 255, 0.02)
+
+.btn--danger
+  border-color: rgba(255, 127, 158, 0.32)
+  background: rgba(255, 127, 158, 0.12)
+  color: #ffd4df
+
+.btn--tiny
+  padding: 0.35rem 0.5rem
+  font-size: smaller
+
+.badge
+  display: inline-flex
+  align-items: center
+  gap: 6px
+  padding: 5px 10px
+  border-radius: 999px
+  border: 1px solid $line-soft
+  background: rgba(255, 255, 255, 0.04)
+  color: $text-secondary
+  font-size: 0.78rem
+
+.badge--success
+  border-color: rgba(88, 231, 168, 0.35)
+  color: $success
+
+.badge--warning
+  border-color: rgba(255, 211, 110, 0.32)
+  color: $warning
+
+.badge--danger
+  border-color: rgba(255, 127, 158, 0.35)
+  color: $danger
+
+.field
+  display: flex
+  flex-direction: column
+  gap: 6px
+
+.field__label
+  font-size: 0.82rem
+  color: $text-muted
+
+.field__input
+  width: 100%
+  min-height: 38px
+  border-radius: $radius-sm
+  border: 1px solid $line-soft
+  background: rgba(8, 12, 21, 0.85)
+  color: $text-primary
+  padding: 0 12px
+  transition: border-color 0.2s ease
+
+  &:focus-visible
+    border-color: rgb(164 112 255 / 0.62)
+    +focus-ring
+
+.title-row
+  display: flex
+  justify-content: space-between
+  align-items: center
+  gap: 10px
+  margin-bottom: 12px
+
+.title-row__heading
+  margin: 0
+  font-size: 1rem
+  color: $text-secondary
+
+.empty-card
+  +card-surface
+  padding: 36px
+  display: grid
+  place-items: center
+  text-align: center
+  gap: 12px
+  color: $text-secondary

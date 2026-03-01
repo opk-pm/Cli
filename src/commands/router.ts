@@ -6,6 +6,7 @@ import { runPmCommand, runPmOnly } from '../core/shell'
 import { runInit } from './init'
 import { runInfo } from './info'
 import { runMigrate } from './migrate'
+import { runGui } from './gui'
 import { runList } from '../ui/list'
 import { C, paint } from '../ui/colors'
 import { printHelp } from '../ui/help'
@@ -226,8 +227,18 @@ export async function runCli(args: string[]): Promise<void> {
   const command = args[0] ?? 'generate'
   const hasPackageTs = await exists(resolve(process.cwd(), 'package.ts'))
   const inferenceMode = !hasPackageTs
+  const noInferenceNoticeCommands = new Set([
+    'help',
+    '--help',
+    '-h',
+    'init',
+    'migrate',
+    'list',
+    'info',
+    'gui',
+  ])
 
-  if (inferenceMode) {
+  if (inferenceMode && !noInferenceNoticeCommands.has(command)) {
     console.log(
       `${paint('Opk is running without a package.ts. Create one with opk migrate', C.lavender)}\n`
     )
@@ -245,6 +256,11 @@ export async function runCli(args: string[]): Promise<void> {
 
   if (command === 'migrate') {
     await runMigrate()
+    return
+  }
+
+  if (command === 'gui') {
+    await runGui(args.slice(1))
     return
   }
 

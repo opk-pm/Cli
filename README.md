@@ -46,6 +46,7 @@ npm i -g opk-pm
 - `opk migrate` - Migrate from an existing `package.json` to `package.ts`, then sync+generate
 - `opk generate [configPath] [packageJsonPath]` - Generate `package.json` from ts-pkg config
 - `opk sync [configPath] [packageJsonPath]` - Sync and regenerate using ts-pkg APIs
+- `opk gui [--port <port>]` - Serve the built Opk GUI (defaults to port `4173`)
 
 #### Info:
 
@@ -69,6 +70,10 @@ opk add react --dev --ignore-scripts
 opk install --frozen-lockfile --silent
 opk update --lock-only --verbose
 ```
+
+### Build
+
+- `bun run build` now builds the CLI and the GUI, and stages GUI assets into `dist/gui` for `opk gui`.
 
 ## package.ts
 
