@@ -24,12 +24,10 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
 export const CmdName: string = 'opk'
 
 export const WhatsNew: string = `
-Opk 0.5 now has useful flags for package management, such as lockfile only installs.
-Furthermore, you can now keep other lockfiles up to date using the altPms field in package.ts.
-
-Finally, Opk 0.5 fixes some critical issues:
-  ∙ Package.json no longer de-syncs after installs
-  ∙ New aliases for common commands added for better compat
+Opk 0.6 (BETA) introduces the all-new Opk Gui!
+The Opk gui allows you to manage your projects, see dependencies visually, and find packages.
+All in one place.
+This feature is experimental! Try with the opk gui command.
 `
 
 export default definePackage({
@@ -37,7 +35,7 @@ export default definePackage({
   altPms: [NodePm],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.5.0',
+  version: '0.6.0-beta1',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   homepage: 'https://opk.a35.dev/',
