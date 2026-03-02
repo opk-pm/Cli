@@ -4,9 +4,9 @@
   "description": "The GUI for Opk, the universal package manager for JS/TS.",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host -p 1562",
+    "preview": "vite preview -p 1563",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
     "check": "vue-tsc --noEmit"
   },
   "dependencies": {

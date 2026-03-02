@@ -138,10 +138,6 @@
             <Icon icon="solar:add-folder-bold-duotone" />
             <span>Add Project</span>
           </h2>
-          <button type="button" class="btn btn--ghost btn--tiny" @click="close">
-            <Icon icon="solar:close-circle-bold-duotone" />
-            <span>Close</span>
-          </button>
         </header>
 
         <div class="modal-panel__body">
