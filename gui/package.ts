@@ -7,8 +7,8 @@ export default definePackage({
   version: '0.1.0',
   type: 'module',
   scripts: {
-    dev: 'vite --host -p 1562', // default opk port + 1
-    preview: 'vite preview -p 1563', // default opk port + 2
+    dev: 'vite --host --port 1562', // default opk port + 1
+    preview: 'vite preview --port 1563', // default opk port + 2
     build: 'vue-tsc --noEmit && vite build',
     check: 'vue-tsc --noEmit',
   },
