@@ -13,6 +13,7 @@ import { runGui } from './gui'
 import { runInfo } from './info'
 import { runInit } from './init'
 import { runMigrate } from './migrate'
+import { runOutdated } from './outdated'
 
 type PmCommand =
   | 'add'
@@ -238,6 +239,7 @@ export async function runCli(args: string[]): Promise<void> {
     'migrate',
     'list',
     'info',
+    'outdated',
     'gui',
   ])
 
@@ -279,6 +281,11 @@ export async function runCli(args: string[]): Promise<void> {
       return
     }
     await runInfo(packageName)
+    return
+  }
+
+  if (command === 'outdated') {
+    await runOutdated(args.slice(1))
     return
   }
 

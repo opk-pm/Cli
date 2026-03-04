@@ -1,6 +1,6 @@
 {
   "name": "opk-pm",
-  "version": "0.6.0-beta2",
+  "version": "0.6.0-rc1",
   "description": "The universal package manager for JS/TS.",
   "keywords": [
     "opk",

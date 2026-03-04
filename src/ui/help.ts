@@ -37,6 +37,7 @@ ${paint('Usage:', C.bold + C.purple)}
   ${Command} help
   ${Command} list
   ${Command} info <pkg>
+  ${Command} outdated [--table|--list]
 
  ${paint('Shared PM Flags:', C.bold + C.purple)}
   ${Bullet} ${paint('--lock-only', C.dim)}, ${paint('--frozen-lockfile', C.dim)} (install, update)

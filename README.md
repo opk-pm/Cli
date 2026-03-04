@@ -52,6 +52,7 @@ npm i -g opk-pm
 
 - `opk list` - Show dependencies in a native opk UI
 - `opk info <pkg>` - Show package info in a native opk UI
+- `opk outdated [--table|--list]` - Show outdated dependencies in a native opk UI
 
 ### Shared PM flags
 
