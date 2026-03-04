@@ -13,6 +13,13 @@ interface NpmMaintainer {
 interface NpmVersionData {
   description?: string
   license?: string
+  type?: string
+  main?: string
+  module?: string
+  exports?: unknown
+  types?: string
+  typings?: string
+  typesVersions?: Record<string, unknown>
   dependencies?: Record<string, string>
   dist?: {
     tarball?: string
@@ -34,6 +41,160 @@ interface NpmInfo {
   versions?: Record<string, NpmVersionData>
   'dist-tags'?: Record<string, string>
   time?: Record<string, string>
+}
+
+interface PackageManifestLike {
+  name?: string
+  type?: string
+  main?: string
+  module?: string
+  exports?: unknown
+  types?: string
+  typings?: string
+  typesVersions?: Record<string, unknown>
+}
+
+interface TypesSupportInfo {
+  status: 'bundled' | 'types-package' | 'none'
+  typesPackageName?: string
+  latestTypesVersion?: string | null
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as Record<string, unknown>
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter(item => typeof item === 'string') as string[]
+}
+
+function normalizeDeps(value: unknown): Record<string, string> {
+  const record = asRecord(value)
+  if (!record) return {}
+
+  return Object.fromEntries(
+    Object.entries(record).filter(
+      ([ , depVersion ]) => typeof depVersion === 'string'
+    )
+  ) as Record<string, string>
+}
+
+function hasTypesInExports(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false
+  if (Array.isArray(value)) {
+    return value.some(item => hasTypesInExports(item))
+  }
+
+  for (const [ key, child ] of Object.entries(value as Record<string, unknown>)) {
+    if (key === 'types') return true
+    if (hasTypesInExports(child)) return true
+  }
+
+  return false
+}
+
+function hasBundledTypes(manifest: PackageManifestLike): boolean {
+  return Boolean(
+    manifest.types ||
+      manifest.typings ||
+      manifest.typesVersions ||
+      hasTypesInExports(manifest.exports)
+  )
+}
+
+function detectModuleSystem(manifest: PackageManifestLike): string {
+  if (manifest.type === 'module') return 'ESM'
+  if (manifest.type === 'commonjs') return 'CJS'
+
+  const main = manifest.main ?? ''
+  if (main.endsWith('.mjs')) return 'ESM'
+  if (main.endsWith('.cjs')) return 'CJS'
+
+  if (typeof manifest.exports === 'string') {
+    if (manifest.exports.endsWith('.mjs')) return 'ESM'
+    if (manifest.exports.endsWith('.cjs')) return 'CJS'
+  }
+
+  const exportsObject =
+    manifest.exports && typeof manifest.exports === 'object'
+      ? (manifest.exports as Record<string, unknown>)
+      : null
+  if (exportsObject) {
+    const exportsText = JSON.stringify(exportsObject)
+    const hasImport = exportsText.includes('"import"')
+    const hasRequire = exportsText.includes('"require"')
+    if (hasImport && hasRequire) return 'ESM+CJS'
+    if (hasImport) return 'ESM'
+    if (hasRequire) return 'CJS'
+  }
+
+  if (manifest.module) return 'ESM'
+  return 'Unknown'
+}
+
+function toTypesPackageName(packageName: string): string {
+  if (packageName.startsWith('@')) {
+    const value = packageName.slice(1)
+    const slash = value.indexOf('/')
+    if (slash > 0) {
+      const scope = value.slice(0, slash)
+      const name = value.slice(slash + 1)
+      return `@types/${scope}__${name}`
+    }
+  }
+  return `@types/${packageName}`
+}
+
+async function fetchTypesPackageVersion(
+  typesPackageName: string
+): Promise<string | null> {
+  const url = `https://registry.npmjs.org/${encodeURIComponent(typesPackageName)}`
+  const response = await fetch(url, { headers: { Accept: 'application/json' } })
+  if (!response.ok) return null
+
+  const data = (await response.json()) as NpmInfo
+  return data['dist-tags']?.latest ?? null
+}
+
+async function detectTypesSupport(
+  manifest: PackageManifestLike,
+  packageName: string
+): Promise<TypesSupportInfo> {
+  if (hasBundledTypes(manifest)) {
+    return { status: 'bundled' }
+  }
+
+  if (packageName.startsWith('@types/')) {
+    return { status: 'types-package' }
+  }
+
+  const typesPackageName = toTypesPackageName(packageName)
+  const latestTypesVersion = await fetchTypesPackageVersion(typesPackageName)
+  if (latestTypesVersion) {
+    return {
+      status: 'types-package',
+      typesPackageName,
+      latestTypesVersion,
+    }
+  }
+
+  return { status: 'none' }
+}
+
+function formatTypesSupport(info: TypesSupportInfo): string {
+  if (info.status === 'bundled') return 'bundled in package'
+  if (info.status === 'types-package') {
+    if (!info.typesPackageName) return '@types package'
+    if (!info.latestTypesVersion) return `${info.typesPackageName} available`
+    return `${info.typesPackageName}@${info.latestTypesVersion}`
+  }
+  return 'none'
 }
 
 function parseRepositoryUrl(
@@ -134,7 +295,8 @@ export async function runInfo(
       )
     }
 
-    return printLocalInfo(data)
+    await printLocalInfo(data)
+    return
   }
 
   const url = `https://registry.npmjs.org/${encodeURIComponent(packageName)}`
@@ -147,24 +309,41 @@ export async function runInfo(
   }
 
   const data = (await response.json()) as NpmInfo
-  return printRemoteInfo(data)
+  await printRemoteInfo(data)
 }
 
-function printLocalInfo(data: any) {
-  const dependencies = data.dependencies ?? {}
+async function printLocalInfo(data: Record<string, unknown>): Promise<void> {
+  const dependencies = normalizeDeps(data.dependencies)
   const depCount = Object.keys(dependencies).length
-  const license = data.license ?? 'unknown'
-  const description = data.description ?? ''
-  const link = data.homepage ?? parseRepositoryUrl(data.repository)
-  const keywords = data.keywords ?? []
-  const version = data.version ?? '0.0.0'
+  const license = asString(data.license) ?? 'unknown'
+  const description = asString(data.description) ?? ''
+  const repository =
+    asString(data.repository) ??
+    (() => {
+      const repositoryRecord = asRecord(data.repository)
+      const repositoryUrl = asString(repositoryRecord?.url)
+      return repositoryUrl ? { url: repositoryUrl } : undefined
+    })()
+  const link = asString(data.homepage) ?? parseRepositoryUrl(repository)
+  const keywords = asStringArray(data.keywords)
+  const version = asString(data.version) ?? '0.0.0'
+  const packageName = typeof data.name === 'string' ? data.name : 'unknown'
+  const moduleSystem = detectModuleSystem(data)
+  const typesSupport = await detectTypesSupport(data, packageName)
+  const npmxLink =
+    packageName !== 'unknown'
+      ? `https://npmx.dev/${encodeURIComponent(packageName)}`
+      : null
 
   console.log(
-    `${paint(`${data.name}@${version}`, C.bold + C.pink)} ${paint('|', C.dim)} ${paint(license, C.lavender)} ${paint('|', C.dim)} deps: ${depCount}`
+    `${paint(`${packageName}@${version}`, C.bold + C.pink)} ${paint('|', C.dim)} ${paint(license, C.lavender)} ${paint('|', C.dim)} deps: ${depCount}`
   )
 
   if (description) console.log(description)
-  if (link) console.log(paint(link, C.purple))
+  if (link) console.log(paint(String(link), C.purple))
+  if (npmxLink) console.log(paint(npmxLink, C.purple))
+  console.log(`${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`)
+  console.log(`${paint('module:', C.purple)} ${moduleSystem}`)
   if (keywords.length > 0) {
     console.log(`${paint('keywords:', C.purple)} ${keywords.join(', ')}`)
   }
@@ -172,7 +351,7 @@ function printLocalInfo(data: any) {
   printDeps(dependencies)
 }
 
-function printRemoteInfo(data: NpmInfo) {
+async function printRemoteInfo(data: NpmInfo): Promise<void> {
   const tags = data['dist-tags'] ?? {}
   const latest = tags.latest
   if (!latest || !data.versions?.[latest]) {
@@ -188,6 +367,9 @@ function printRemoteInfo(data: NpmInfo) {
   const link = data.homepage ?? parseRepositoryUrl(data.repository)
   const keywords = data.keywords ?? []
   const published = data.time?.[latest]
+  const moduleSystem = detectModuleSystem(latestData)
+  const typesSupport = await detectTypesSupport(latestData, data.name)
+  const npmxLink = `https://npmx.dev/${encodeURIComponent(data.name)}`
 
   console.log(
     `${paint(`${data.name}@${latest}`, C.bold + C.pink)} ${paint('|', C.dim)} ${paint(license, C.lavender)} ${paint('|', C.dim)} deps: ${depCount} ${paint('|', C.dim)} versions: ${versionCount}`
@@ -195,6 +377,9 @@ function printRemoteInfo(data: NpmInfo) {
 
   if (description) console.log(description)
   if (link) console.log(paint(link, C.purple))
+  console.log(paint(npmxLink, C.purple))
+  console.log(`${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`)
+  console.log(`${paint('module:', C.purple)} ${moduleSystem}`)
   if (keywords.length > 0) {
     console.log(`${paint('keywords:', C.purple)} ${keywords.join(', ')}`)
   }

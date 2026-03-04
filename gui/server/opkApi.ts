@@ -261,11 +261,12 @@ async function handleProjectInfo(url: URL, res: ServerResponse): Promise<void> {
   const packageTs = await readOptionalText(resolve(projectPath, 'package.ts'))
   const lockfiles = await findLockfiles(projectPath)
 
-  const dependencies = packageJson?.dependencies ?? {}
-  const devDependencies = packageJson?.devDependencies ?? {}
-  const peerDependencies = packageJson?.peerDependencies ?? {}
-  const optionalDependencies = packageJson?.optionalDependencies ?? {}
-  const scripts = packageJson?.scripts ? Object.keys(packageJson.scripts) : []
+  const dependencies = normalizeRecord(packageJson?.dependencies)
+  const devDependencies = normalizeRecord(packageJson?.devDependencies)
+  const peerDependencies = normalizeRecord(packageJson?.peerDependencies)
+  const optionalDependencies = normalizeRecord(packageJson?.optionalDependencies)
+  const scriptsRecord = asRecord(packageJson?.scripts)
+  const scripts = scriptsRecord ? Object.keys(scriptsRecord) : []
 
   const info = {
     path: projectPath,
@@ -349,34 +350,24 @@ async function handleRunOpk(
 ): Promise<void> {
   const body = await readJsonBody(req)
   const projectPath = await parseDirectoryInput(body.path, 'path')
-  const argsRaw = body.args
-  if (!Array.isArray(argsRaw)) {
-    throw new ApiError(400, 'args must be an array of strings')
-  }
-
-  const args = argsRaw
-    .filter(item => typeof item === 'string')
-    .map(item => item.trim())
-    .filter(Boolean)
+  const args = parseStringArray(body.args, 'args')
   if (args.length === 0) {
     throw new ApiError(400, 'args cannot be empty')
   }
 
-  const stdin = typeof body.stdin === 'string' ? body.stdin : ''
-  const cliEntry = resolve(options.repoRoot, '@/cli.ts')
-  const commandArgs = [ 'run', cliEntry, ...args ]
-
-  const { exitCode, stdout, stderr } = await spawnAndCollect(
-    'bun',
-    commandArgs,
+  const stdin = asString(body.stdin) ?? ''
+  const cliEntry = await resolveCliEntry(options.repoRoot)
+  const { command, exitCode, stdout, stderr } = await runOpk(
+    cliEntry,
     projectPath,
+    args,
     stdin
   )
 
   sendJson(res, 200, {
     result: {
       args,
-      command: [ 'bun', ...commandArgs ].join(' '),
+      command,
       exitCode,
       stdout,
       stderr,
@@ -616,6 +607,41 @@ async function spawnAndCollect(
   })
 }
 
+async function runOpk(
+  cliEntry: string,
+  cwd: string,
+  args: string[],
+  stdin: string
+): Promise<{
+  command: string
+  exitCode: number
+  stdout: string
+  stderr: string
+}> {
+  const commandArgs = [ 'run', cliEntry, ...args ]
+  const result = await spawnAndCollect('bun', commandArgs, cwd, stdin)
+  return {
+    command: `bun ${commandArgs.join(' ')}`,
+    ...result,
+  }
+}
+
+async function resolveCliEntry(repoRoot: string): Promise<string> {
+  const candidates = [
+    resolve(repoRoot, 'dist/cli.js'),
+    resolve(repoRoot, 'src/cli.ts'),
+  ]
+  for (const candidate of candidates) {
+    if (await fileExists(candidate)) {
+      return candidate
+    }
+  }
+  throw new ApiError(
+    500,
+    'Unable to resolve CLI entrypoint. Build Opk first or run from the repository root.'
+  )
+}
+
 async function parseDirectoryInput(
   value: unknown,
   fieldName: string
@@ -640,6 +666,16 @@ function parseBoundedInt(
   const parsed = Number.parseInt(value, 10)
   if (!Number.isFinite(parsed)) return fallback
   return Math.max(min, Math.min(max, parsed))
+}
+
+function parseStringArray(value: unknown, fieldName: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new ApiError(400, `${fieldName} must be an array of strings`)
+  }
+  return value
+    .filter(item => typeof item === 'string')
+    .map(item => String(item).trim())
+    .filter(Boolean)
 }
 
 async function readStoredProjects(): Promise<ProjectRecord[]> {
@@ -711,12 +747,12 @@ async function ensureProjectStore(): Promise<void> {
 
 async function readPackageJson(
   projectPath: string
-): Promise<Record<string, any> | null> {
+): Promise<Record<string, unknown> | null> {
   const packageJsonPath = resolve(projectPath, 'package.json')
   const text = await readOptionalText(packageJsonPath)
   if (!text) return null
   try {
-    return JSON.parse(text) as Record<string, any>
+    return JSON.parse(text) as Record<string, unknown>
   } catch {
     return null
   }
@@ -761,9 +797,36 @@ function detectPrimaryPm(
 
 function detectAltPms(packageTs: string | null): string[] {
   if (!packageTs) return []
-  const match = packageTs.match(/\baltPms\s*:\s*\[([\s\S]*?)\]/m)
+  const match = packageTs.match(/\baltPms\s*:\s*\[([\s\S]*?)]/m)
   if (!match?.[1]) return []
   return Array.from(new Set(match[1].match(/[A-Za-z_$][\w$]*/g) ?? []))
+}
+
+async function fetchRegistryPackages(
+  query: string,
+  size: number
+): Promise<RegistryPackageSummary[]> {
+  const searchText = query || 'keywords:*'
+  const endpoint = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(searchText)}&size=${size}&from=0`
+  const response = await fetch(endpoint, {
+    headers: { Accept: 'application/json' },
+  })
+
+  if (!response.ok) {
+    throw new ApiError(
+      502,
+      `Failed to fetch registry packages (${response.status} ${response.statusText})`
+    )
+  }
+
+  const payload = (await response.json()) as {
+    objects?: Array<Record<string, unknown>>
+  }
+  const packages = (payload.objects ?? [])
+    .map(item => toRegistrySummary(item))
+    .filter(Boolean) as RegistryPackageSummary[]
+  packages.sort((a, b) => dateScore(b.updatedAt) - dateScore(a.updatedAt))
+  return packages
 }
 
 function normalizeRecord(value: unknown): Record<string, string> {
@@ -824,6 +887,20 @@ function extractNameFromSpec(spec: string): string {
 function extractNameFromPackagePath(pathValue: string): string {
   const parts = pathValue.split('node_modules/').filter(Boolean)
   return parts[parts.length - 1] ?? pathValue
+}
+
+function extractPackageScope(packageName: string): string | null {
+  if (!packageName.startsWith('@')) return null
+  const slash = packageName.indexOf('/')
+  return slash > 1 ? packageName.slice(0, slash) : null
+}
+
+function resolveNodeModulesPackagePath(
+  projectPath: string,
+  packageName: string
+): string {
+  const segments = packageName.split('/').filter(Boolean)
+  return resolve(projectPath, 'node_modules', ...segments)
 }
 
 async function enrichGraphNodeSizes(

@@ -1,10 +1,10 @@
-import { spawn } from 'node:child_process'
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
-import { basename, dirname, extname, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import {spawn} from 'node:child_process'
+import {mkdir, readdir, readFile, stat, writeFile} from 'node:fs/promises'
+import {homedir} from 'node:os'
+import {basename, dirname, extname, resolve, sep} from 'node:path'
+import {fileURLToPath} from 'node:url'
 
-import { C, paint } from '@/ui/colors'
+import {C, paint} from '@/ui/colors'
 
 const DEFAULT_PORT = 1561
 const PROJECT_STORE_PATH = resolve(homedir(), '.opk', 'gui-projects.json')
@@ -152,26 +152,6 @@ function parsePortValue(raw: string): number {
   return port
 }
 
-async function findGuiRoot(): Promise<string | null> {
-  const moduleDir = dirname(fileURLToPath(import.meta.url))
-  const candidates = [
-    resolve(moduleDir, 'gui'),
-    resolve(moduleDir, '../gui'),
-    resolve(moduleDir, '../../dist/gui'),
-    resolve(moduleDir, '../../gui/dist'),
-    resolve(process.cwd(), 'dist/gui'),
-    resolve(process.cwd(), 'gui/dist'),
-  ]
-
-  for (const candidate of candidates) {
-    if (await hasIndexHtml(candidate)) {
-      return candidate
-    }
-  }
-
-  return null
-}
-
 async function resolveGuiRuntime(): Promise<GuiRuntime> {
   const moduleDir = dirname(fileURLToPath(import.meta.url))
   const repoCandidates = unique([
@@ -192,7 +172,8 @@ async function resolveGuiRuntime(): Promise<GuiRuntime> {
     ])
     const cliCandidates = unique([
       resolve(moduleDir, 'cli.js'),
-      resolve(repoRoot, '@/cli.ts'),
+      resolve(moduleDir, '../cli.ts'),
+      resolve(repoRoot, 'src/cli.ts'),
       resolve(repoRoot, 'dist/cli.js'),
     ])
 
@@ -718,27 +699,6 @@ async function detectLockfiles(projectPath: string): Promise<string[]> {
   return states.filter(Boolean) as string[]
 }
 
-async function readProjectConfigSummary(
-  packageTsPath: string
-): Promise<ProjectConfigSummary | null> {
-  if (!(await exists(packageTsPath))) {
-    return null
-  }
-
-  try {
-    const config = await loadConfig(packageTsPath)
-    const pmName = asString(config.pm?.name) ?? null
-    const altPms = Array.isArray(config.altPms)
-      ? config.altPms
-          .map(pm => asString(pm?.name))
-          .filter((value): value is string => Boolean(value))
-      : []
-    return { pmName, altPms }
-  } catch {
-    return null
-  }
-}
-
 function detectPrimaryPm(
   packageTs: string | null,
   lockfiles: string[]
@@ -762,7 +722,7 @@ function detectPrimaryPm(
 
 function detectAltPms(packageTs: string | null): string[] {
   if (!packageTs) return []
-  const match = packageTs.match(/\baltPms\s*:\s*\[([\s\S]*?)\]/m)
+  const match = packageTs.match(/\baltPms\s*:\s*\[([\s\S]*?)]/m)
   if (!match?.[1]) return []
   return Array.from(new Set(match[1].match(/[A-Za-z_$][\w$]*/g) ?? []))
 }
@@ -1070,11 +1030,10 @@ function parseStringArray(value: unknown, field: string): string[] {
   if (!Array.isArray(value)) {
     throw new ApiError(400, `${field} must be an array`)
   }
-  const mapped = value
+  return value
     .filter(item => typeof item === 'string')
     .map(item => String(item).trim())
     .filter(Boolean)
-  return mapped
 }
 
 async function parseJsonBody(
