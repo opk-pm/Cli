@@ -12,8 +12,8 @@ export async function runCommand(
   command: string,
   args: string[] = []
 ): Promise<void> {
-  const full = [command, ...args.map(shellEscape)].join(' ')
-  const proc = Bun.spawn(['sh', '-lc', full], {
+  const full = [ command, ...args.map(shellEscape) ].join(' ')
+  const proc = Bun.spawn([ 'sh', '-lc', full ], {
     stdin: 'inherit',
     stdout: 'inherit',
     stderr: 'inherit',
@@ -36,8 +36,8 @@ export async function runPmCommand(
     throw new Error('Invalid package manager command')
   }
 
-  const [cmd, ...baseArgs] = parts
-  await runCommand(cmd!, [...baseArgs, ...args])
+  const [ cmd, ...baseArgs ] = parts
+  await runCommand(cmd!, [ ...baseArgs, ...args ])
   await syncAndGenerate(configPath, packageJsonPath)
   if (syncAltPms) {
     await syncAltPmLockFiles(configPath)
@@ -49,8 +49,8 @@ export async function runPmOnly(base: string, args: string[]): Promise<void> {
   if (parts.length === 0) {
     throw new Error('Invalid package manager command')
   }
-  const [cmd, ...baseArgs] = parts
-  await runCommand(cmd!, [...baseArgs, ...args])
+  const [ cmd, ...baseArgs ] = parts
+  await runCommand(cmd!, [ ...baseArgs, ...args ])
 }
 
 async function syncAltPmLockFiles(configPath: string): Promise<void> {

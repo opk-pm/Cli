@@ -1,15 +1,18 @@
 import { resolve } from 'node:path'
-import { writePackageJson, type PackageManager } from '@opk/ts-pkg'
-import { detectPmSelection, loadConfig, syncAndGenerate } from '../core/config'
-import { exists } from '../core/fs'
-import { runPmCommand, runPmOnly } from '../core/shell'
-import { runInit } from './init'
-import { runInfo } from './info'
-import { runMigrate } from './migrate'
+
+import { type PackageManager, writePackageJson } from '@opk/ts-pkg'
+
+import { detectPmSelection, loadConfig, syncAndGenerate } from '@/core/config'
+import { exists } from '@/core/fs'
+import { runPmCommand, runPmOnly } from '@/core/shell'
+import { C, paint } from '@/ui/colors'
+import { printHelp } from '@/ui/help'
+import { runList } from '@/ui/list'
+
 import { runGui } from './gui'
-import { runList } from '../ui/list'
-import { C, paint } from '../ui/colors'
-import { printHelp } from '../ui/help'
+import { runInfo } from './info'
+import { runInit } from './init'
+import { runMigrate } from './migrate'
 
 type PmCommand =
   | 'add'
@@ -49,91 +52,91 @@ const AddInstallUpdateCommands = new Set<PmCommand>([
   'update',
   'up',
 ])
-const InstallUpdateCommands = new Set<PmCommand>(['install', 'update', 'up'])
+const InstallUpdateCommands = new Set<PmCommand>([ 'install', 'update', 'up' ])
 
 const PmFlagRules: PmFlagRule[] = [
   {
     id: 'lock-only',
-    names: ['--lock-only'],
+    names: [ '--lock-only' ],
     commands: InstallUpdateCommands,
     group: 'lock',
     resolve: pm => pm.lockFlags.lockOnly,
   },
   {
     id: 'frozen-lockfile',
-    names: ['--frozen-lockfile', '--frozen-lock-file'],
+    names: [ '--frozen-lockfile', '--frozen-lock-file' ],
     commands: InstallUpdateCommands,
     group: 'lock',
     resolve: pm => pm.lockFlags.frozenLockFile,
   },
   {
     id: 'ignore-scripts',
-    names: ['--ignore-scripts'],
+    names: [ '--ignore-scripts' ],
     commands: AddInstallUpdateCommands,
     resolve: pm => pm.ignoreFlags.ignoreScripts,
   },
   {
     id: 'ignore-engines',
-    names: ['--ignore-engines'],
+    names: [ '--ignore-engines' ],
     commands: AddInstallUpdateCommands,
     resolve: pm => pm.ignoreFlags.ignoreEngines,
   },
   {
     id: 'ignore-optional',
-    names: ['--ignore-optional'],
+    names: [ '--ignore-optional' ],
     commands: AddInstallUpdateCommands,
     resolve: pm => pm.ignoreFlags.ignoreOptional,
   },
   {
     id: 'ignore-workspace-root-check',
-    names: ['--ignore-workspace-root-check'],
+    names: [ '--ignore-workspace-root-check' ],
     commands: AddInstallUpdateCommands,
     resolve: pm => pm.ignoreFlags.ignoreWorkspaceRootCheck,
   },
   {
     id: 'ignore-pnp',
-    names: ['--ignore-pnp'],
+    names: [ '--ignore-pnp' ],
     commands: AddInstallUpdateCommands,
     resolve: pm => pm.ignoreFlags.ignorePnP,
   },
   {
     id: 'production',
-    names: ['--production', '--prod'],
+    names: [ '--production', '--prod' ],
     commands: AddInstallUpdateCommands,
     group: 'scope',
     resolve: pm => pm.scopeFlags.production,
   },
   {
     id: 'dev',
-    names: ['--dev'],
+    names: [ '--dev' ],
     commands: AddInstallUpdateCommands,
     group: 'scope',
     resolve: pm => pm.scopeFlags.dev,
   },
   {
     id: 'peer',
-    names: ['--peer'],
+    names: [ '--peer' ],
     commands: AddInstallUpdateCommands,
     group: 'scope',
     resolve: pm => pm.scopeFlags.peer,
   },
   {
     id: 'optional',
-    names: ['--optional'],
+    names: [ '--optional' ],
     commands: AddInstallUpdateCommands,
     group: 'scope',
     resolve: pm => pm.scopeFlags.optional,
   },
   {
     id: 'verbose',
-    names: ['--verbose'],
+    names: [ '--verbose' ],
     commands: PmCommands,
     group: 'output',
     resolve: pm => pm.outputFlags.verbose,
   },
   {
     id: 'silent',
-    names: ['--silent'],
+    names: [ '--silent' ],
     commands: PmCommands,
     group: 'output',
     resolve: pm => pm.outputFlags.silent,
@@ -203,7 +206,7 @@ function mapPmFlags(
     }
   }
 
-  return [...mapped, ...passthrough]
+  return [ ...mapped, ...passthrough ]
 }
 
 function hasPositionalArg(args: string[]): boolean {

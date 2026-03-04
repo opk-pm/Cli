@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
   import { computed, onMounted, ref, watch } from 'vue'
+
   import { getRegistryPackages } from '@/services/api'
   import type { CommandRequest, ProjectRecord, RegistryPackage } from '@/types'
 
@@ -76,7 +77,7 @@
     const spec = `${pkg.name}@${pkg.version}`
     emit('run', {
       label: `Add ${pkg.name}`,
-      args: ['add', spec],
+      args: [ 'add', spec ],
       path: targetProjectPath.value,
     })
   }
@@ -156,7 +157,11 @@
 
       <div v-if="error" class="badge badge--danger">{{ error }}</div>
       <div v-else-if="packages.length === 0" class="empty-card">
-        <Icon icon="solar:archive-minimalistic-bold-duotone" width="38" height="38" />
+        <Icon
+          icon="solar:archive-minimalistic-bold-duotone"
+          width="38"
+          height="38"
+        />
         <p class="muted">No packages found.</p>
       </div>
       <div v-else class="registry-list scroll-area">
@@ -215,7 +220,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .registry-tab
     min-height: 0

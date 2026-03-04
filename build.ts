@@ -1,5 +1,6 @@
 import { cp, mkdir, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
+
 import Bun from 'bun'
 
 const projectRoot = process.cwd()
@@ -9,7 +10,7 @@ const guiDistPath = resolve(guiPath, 'dist')
 const bundledGuiPath = resolve(distPath, 'gui')
 
 await Bun.build({
-  entrypoints: ['./src/cli.ts', './src/opx.ts'],
+  entrypoints: [ './src/cli.ts', './src/opx.ts' ],
   outdir: distPath,
   format: 'esm',
   target: 'node',
@@ -19,7 +20,7 @@ await Bun.build({
   banner: '#!/usr/bin/env bun',
 })
 
-await runCommand(['bun', 'run', 'build'], guiPath)
+await runCommand([ 'bun', 'run', 'build' ], guiPath)
 await rm(bundledGuiPath, { recursive: true, force: true })
 await mkdir(distPath, { recursive: true })
 await cp(guiDistPath, bundledGuiPath, { recursive: true })

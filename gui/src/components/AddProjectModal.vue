@@ -1,8 +1,10 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
   import { computed, ref, watch } from 'vue'
+
   import { addProject, getQuickLocations, listFolders } from '@/services/api'
   import type { FsEntry, ProjectRecord, QuickLocation, TreeNode } from '@/types'
+
   import FolderTreeNode from './FolderTreeNode.vue'
 
   const props = defineProps<{
@@ -205,8 +207,8 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
-  @use '../../styles/mixins' as *
+  @use '@/styles/tokens' as *
+  @use '@/styles/mixins' as *
 
   .modal-wrap
     position: fixed

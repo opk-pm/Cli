@@ -1,7 +1,9 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
-import pkg, { WhatsNew } from '../package'
+
+import pkg, { WhatsNew } from 'package'
+
 import { runCli } from './commands/router'
 import { exists } from './core/fs'
 import { C, paint } from './ui/colors'

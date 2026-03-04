@@ -1,8 +1,9 @@
-import { C, paint } from '../ui/colors'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+
+import { C, paint } from '@/ui/colors'
 
 interface NpmMaintainer {
   name: string
@@ -57,7 +58,7 @@ function formatSize(bytes: number | undefined): string {
 }
 
 function printDeps(deps: Record<string, string> | undefined): void {
-  const entries = Object.entries(deps ?? {}).sort(([a], [b]) =>
+  const entries = Object.entries(deps ?? {}).sort(([ a ], [ b ]) =>
     a.localeCompare(b)
   )
   console.log('')
@@ -66,7 +67,7 @@ function printDeps(deps: Record<string, string> | undefined): void {
     console.log(`${paint('•', C.pink)} none`)
     return
   }
-  for (const [name, version] of entries) {
+  for (const [ name, version ] of entries) {
     console.log(`${paint('•', C.pink)} ${name}: ${paint(version, C.dim)}`)
   }
 }
@@ -91,7 +92,7 @@ function printDistTags(tags: Record<string, string> | undefined): void {
   if (entries.length === 0) return
   console.log('')
   console.log(paint('dist-tags:', C.purple))
-  for (const [tag, value] of entries) {
+  for (const [ tag, value ] of entries) {
     console.log(`${paint(tag, C.pink)}: ${value}`)
   }
 }

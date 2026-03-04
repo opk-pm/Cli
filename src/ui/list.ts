@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { PackageJsonSummary } from '../types'
+
+import type { PackageJsonSummary } from '@/types'
+
 import { C, paint } from './colors'
 
 function fitLabel(text: string, width: number): string {
@@ -21,7 +23,7 @@ function buildHeader(name: string, version: string): string[] {
   const content =
     paint('│', C.purple) + paint(padded, C.bold + C.pink) + paint('│', C.purple)
 
-  return [top, content, bottom]
+  return [ top, content, bottom ]
 }
 
 function collectDeps(
@@ -32,9 +34,9 @@ function collectDeps(
   return [
     paint(`${name}:`, C.purple),
     ...Object.entries(deps)
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([ a ], [ b ]) => a.localeCompare(b))
       .map(
-        ([pkg, ver]) => `  ${paint('•', C.pink)} ${pkg} ${paint(ver, C.dim)}`
+        ([ pkg, ver ]) => `  ${paint('•', C.pink)} ${pkg} ${paint(ver, C.dim)}`
       ),
   ]
 }

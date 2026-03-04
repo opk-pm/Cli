@@ -7,6 +7,7 @@
     ref,
     watch,
   } from 'vue'
+
   import AddProjectModal from '@/components/AddProjectModal.vue'
   import CommandOutput from '@/components/CommandOutput.vue'
   import DependencyGraphTab from '@/components/DependencyGraphTab.vue'
@@ -82,7 +83,11 @@
   const tabs: NavigationTab[] = [
     { id: 'overview', label: 'Overview', icon: 'solar:widget-4-bold-duotone' },
     { id: 'packages', label: 'Packages', icon: 'solar:box-bold-duotone' },
-    { id: 'project', label: 'Project', icon: 'solar:document-text-bold-duotone' },
+    {
+      id: 'project',
+      label: 'Project',
+      icon: 'solar:document-text-bold-duotone',
+    },
     { id: 'graph', label: 'Graph', icon: 'solar:graph-bold-duotone' },
   ]
 
@@ -172,7 +177,7 @@
     loading.projectData = true
     globalError.value = null
     try {
-      const [info, packages, graph] = await Promise.all([
+      const [ info, packages, graph ] = await Promise.all([
         getProjectInfo(selectedProjectPath.value),
         getProjectPackages(selectedProjectPath.value),
         getDependencyGraph(selectedProjectPath.value),

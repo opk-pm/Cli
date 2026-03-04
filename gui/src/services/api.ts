@@ -6,8 +6,8 @@ import type {
   PackageSection,
   ProjectInfo,
   ProjectRecord,
-  RegistryPackage,
   QuickLocation,
+  RegistryPackage,
 } from '@/types'
 
 interface ApiErrorPayload {

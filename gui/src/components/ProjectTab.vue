@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
+
   import type { ProjectInfo } from '@/types'
 
   const props = defineProps<{
@@ -104,7 +105,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .project-tab
     display: grid

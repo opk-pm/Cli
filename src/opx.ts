@@ -2,7 +2,7 @@ import { runCli } from './commands/router'
 import { C, paint } from './ui/colors'
 
 export async function main(): Promise<void> {
-  await runCli(['exec', ...process.argv.slice(2)])
+  await runCli([ 'exec', ...process.argv.slice(2) ])
 }
 
 main().catch(error => {

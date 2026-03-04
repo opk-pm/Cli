@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
   import { computed, ref } from 'vue'
+
   import type { CommandRequest } from '@/types'
 
   const props = defineProps<{
@@ -18,32 +19,32 @@
     {
       label: 'Install',
       icon: 'solar:download-bold-duotone',
-      args: ['install'],
+      args: [ 'install' ],
     },
     {
       label: 'Update',
       icon: 'solar:refresh-bold-duotone',
-      args: ['update'],
+      args: [ 'update' ],
     },
     {
       label: 'Audit',
       icon: 'solar:shield-check-bold-duotone',
-      args: ['audit'],
+      args: [ 'audit' ],
     },
     {
       label: 'Sync',
       icon: 'solar:repeat-one-bold-duotone',
-      args: ['sync'],
+      args: [ 'sync' ],
     },
     {
       label: 'Generate',
       icon: 'solar:file-text-bold-duotone',
-      args: ['generate'],
+      args: [ 'generate' ],
     },
     {
       label: 'Migrate',
       icon: 'solar:transfer-horizontal-bold-duotone',
-      args: ['migrate'],
+      args: [ 'migrate' ],
     },
   ])
 
@@ -58,7 +59,7 @@
     const name = projectNameFromPath(props.projectPath)
     emit('run', {
       label: 'Initialize project',
-      args: ['init'],
+      args: [ 'init' ],
       stdin: `${name}\nManaged with Opk GUI\nMIT\nmodule\n`,
     })
   }

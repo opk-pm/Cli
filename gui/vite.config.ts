@@ -1,7 +1,9 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, type Plugin } from 'vite'
+
 import { createOpkApiMiddleware } from './server/opkApi'
 
 function opkApiPlugin(): Plugin {
@@ -20,7 +22,7 @@ function opkApiPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [vue(), opkApiPlugin()],
+  plugins: [ vue(), opkApiPlugin() ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

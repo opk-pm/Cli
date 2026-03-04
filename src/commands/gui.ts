@@ -1,10 +1,10 @@
 import { spawn } from 'node:child_process'
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadConfig } from '../core/config'
-import { C, paint } from '../ui/colors'
+
+import { C, paint } from '@/ui/colors'
 
 const DEFAULT_PORT = 1561
 const PROJECT_STORE_PATH = resolve(homedir(), '.opk', 'gui-projects.json')
@@ -41,11 +41,6 @@ interface GraphNode {
   version: string | null
   scope: string | null
   sizeBytes: number | null
-}
-
-interface ProjectConfigSummary {
-  pmName: string | null
-  altPms: string[]
 }
 
 interface GuiRuntime {
@@ -180,6 +175,7 @@ async function findGuiRoot(): Promise<string | null> {
 async function resolveGuiRuntime(): Promise<GuiRuntime> {
   const moduleDir = dirname(fileURLToPath(import.meta.url))
   const repoCandidates = unique([
+    resolve(moduleDir, '..'),
     resolve(moduleDir, '../..'),
     resolve(moduleDir, '../../..'),
     process.cwd(),
@@ -187,13 +183,16 @@ async function resolveGuiRuntime(): Promise<GuiRuntime> {
 
   for (const repoRoot of repoCandidates) {
     const guiCandidates = unique([
+      resolve(moduleDir, 'gui'),
+      resolve(moduleDir, '../gui'),
       resolve(repoRoot, 'dist/gui'),
       resolve(repoRoot, 'gui/dist'),
       resolve(moduleDir, '../../dist/gui'),
       resolve(moduleDir, '../../gui/dist'),
     ])
     const cliCandidates = unique([
-      resolve(repoRoot, 'src/cli.ts'),
+      resolve(moduleDir, 'cli.js'),
+      resolve(repoRoot, '@/cli.ts'),
       resolve(repoRoot, 'dist/cli.js'),
     ])
 
@@ -276,9 +275,9 @@ async function handleApiRequest(
           'path'
         )
         const packageJson = await readPackageJson(projectPath)
-        const packageTsPath = resolve(projectPath, 'package.ts')
-        const packageTs = await readOptionalText(packageTsPath)
-        const configSummary = await readProjectConfigSummary(packageTsPath)
+        const packageTs = await readOptionalText(
+          resolve(projectPath, 'package.ts')
+        )
         const lockfiles = await detectLockfiles(projectPath)
 
         const deps = normalizeDeps(packageJson?.dependencies)
@@ -296,9 +295,8 @@ async function handleApiRequest(
             name: asString(packageJson?.name) ?? basename(projectPath),
             version: asString(packageJson?.version) ?? null,
             description: asString(packageJson?.description) ?? null,
-            packageManager:
-              configSummary?.pmName ?? detectPrimaryPm(packageTs, lockfiles),
-            altPms: configSummary?.altPms ?? detectAltPms(packageTs),
+            packageManager: detectPrimaryPm(packageTs, lockfiles),
+            altPms: detectAltPms(packageTs),
             hasPackageJson: packageJson !== null,
             hasPackageTs: packageTs !== null,
             lockfiles,
@@ -327,7 +325,7 @@ async function handleApiRequest(
 
         const packages = sections.map(section => {
           const entries = Object.entries(normalizeDeps(packageJson?.[section]))
-            .map(([name, version]) => ({ name, version }))
+            .map(([ name, version ]) => ({ name, version }))
             .sort((a, b) => a.name.localeCompare(b.name))
           return { section, entries }
         })
@@ -449,7 +447,12 @@ async function buildQuickLocations(
 ): Promise<Array<{ id: string; name: string; path: string; icon: string }>> {
   const home = homedir()
   const locations = [
-    { id: 'home', name: 'Home', path: home, icon: 'solar:home-angle-bold-duotone' },
+    {
+      id: 'home',
+      name: 'Home',
+      path: home,
+      icon: 'solar:home-angle-bold-duotone',
+    },
     {
       id: 'desktop',
       name: 'Desktop',
@@ -474,7 +477,12 @@ async function buildQuickLocations(
       path: repoRoot,
       icon: 'solar:code-bold-duotone',
     },
-    { id: 'root', name: 'Computer', path: '/', icon: 'solar:laptop-bold-duotone' },
+    {
+      id: 'root',
+      name: 'Computer',
+      path: '/',
+      icon: 'solar:laptop-bold-duotone',
+    },
   ]
 
   const visible = await Promise.all(
@@ -501,7 +509,7 @@ async function runOpk(
   stderr: string
   command: string
 }> {
-  const commandArgs = ['run', cliEntry, ...args]
+  const commandArgs = [ 'run', cliEntry, ...args ]
   const command = `bun ${commandArgs.join(' ')}`
 
   const result = await new Promise<{
@@ -512,7 +520,7 @@ async function runOpk(
     const child = spawn('bun', commandArgs, {
       cwd,
       env: process.env,
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: [ 'pipe', 'pipe', 'pipe' ],
     })
 
     let stdout = ''
@@ -619,7 +627,7 @@ async function writeStoredProjects(projects: ProjectRecord[]): Promise<void> {
 
 function dedupeProjects(projects: ProjectRecord[]): ProjectRecord[] {
   const seen = new Set<string>()
-  const ordered = [...projects].sort((a, b) =>
+  const ordered = [ ...projects ].sort((a, b) =>
     a.addedAt.localeCompare(b.addedAt)
   )
   return ordered.filter(project => {
@@ -661,8 +669,8 @@ function normalizeDeps(value: unknown): Record<string, string> {
   }
   const record = value as Record<string, unknown>
   const entries = Object.entries(record)
-    .filter(([, version]) => typeof version === 'string')
-    .map(([name, version]) => [name, version as string])
+    .filter(([ , version ]) => typeof version === 'string')
+    .map(([ name, version ]) => [ name, version as string ])
   return Object.fromEntries(entries)
 }
 
@@ -839,7 +847,7 @@ async function buildDependencyGraph(
       } else {
         const packages = asRecord(lock.packages)
         if (packages) {
-          for (const [entryPath, value] of Object.entries(packages)) {
+          for (const [ entryPath, value ] of Object.entries(packages)) {
             if (!entryPath) continue
             if (nodes.size >= MAX_GRAPH_NODES) break
             const meta = asRecord(value)
@@ -852,9 +860,9 @@ async function buildDependencyGraph(
         }
       }
       await enrichGraphNodeSizes(projectPath, nodes, packagePathsByNodeId)
-      return { source: 'package-lock.json', nodes: [...nodes.values()], edges }
+      return { source: 'package-lock.json', nodes: [ ...nodes.values() ], edges }
     } catch {
-      return { source: 'package-lock.json', nodes: [...nodes.values()], edges }
+      return { source: 'package-lock.json', nodes: [ ...nodes.values() ], edges }
     }
   }
 
@@ -867,7 +875,7 @@ async function buildDependencyGraph(
       >
       const packages = asRecord(lock.packages)
       if (packages) {
-        for (const [spec, metaValue] of Object.entries(packages)) {
+        for (const [ spec, metaValue ] of Object.entries(packages)) {
           if (nodes.size >= MAX_GRAPH_NODES) break
           const meta = asRecord(metaValue)
           const name = extractNameFromSpec(spec)
@@ -877,9 +885,9 @@ async function buildDependencyGraph(
         }
       }
       await enrichGraphNodeSizes(projectPath, nodes, packagePathsByNodeId)
-      return { source: 'bun.lock', nodes: [...nodes.values()], edges }
+      return { source: 'bun.lock', nodes: [ ...nodes.values() ], edges }
     } catch {
-      return { source: 'bun.lock', nodes: [...nodes.values()], edges }
+      return { source: 'bun.lock', nodes: [ ...nodes.values() ], edges }
     }
   }
 
@@ -890,7 +898,7 @@ async function buildDependencyGraph(
     normalizeDeps(packageJson?.optionalDependencies),
   ]
   for (const group of fallback) {
-    for (const [name, version] of Object.entries(group)) {
+    for (const [ name, version ] of Object.entries(group)) {
       if (nodes.size >= MAX_GRAPH_NODES) break
       const id = addNode(name, version)
       addEdge('root', id)
@@ -898,7 +906,7 @@ async function buildDependencyGraph(
   }
 
   await enrichGraphNodeSizes(projectPath, nodes, packagePathsByNodeId)
-  return { source: 'package.json', nodes: [...nodes.values()], edges }
+  return { source: 'package.json', nodes: [ ...nodes.values() ], edges }
 }
 
 function walkPackageLock(
@@ -909,7 +917,7 @@ function walkPackageLock(
   addEdge: (from: string, to: string) => void
 ): void {
   if (depth > MAX_GRAPH_DEPTH) return
-  for (const [name, value] of Object.entries(deps)) {
+  for (const [ name, value ] of Object.entries(deps)) {
     const meta = asRecord(value) ?? {}
     const version = asString(meta.version)
     const id = addNode(name, version)

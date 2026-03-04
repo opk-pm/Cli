@@ -2,6 +2,7 @@
   import { Icon } from '@iconify/vue'
   import * as echarts from 'echarts'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
   import type { DependencyGraph, GraphNode } from '@/types'
 
   interface GroupedNode {
@@ -137,7 +138,7 @@
           focusNodeAdjacency: true,
           force: {
             repulsion: graph.nodes.length > 90 ? 120 : 180,
-            edgeLength: [38, 116],
+            edgeLength: [ 38, 116 ],
             gravity: 0.08,
           },
           label: {
@@ -290,7 +291,7 @@
 
   function formatBytes(bytes: number): string {
     if (bytes <= 0) return 'unknown'
-    const units = ['B', 'KB', 'MB', 'GB']
+    const units = [ 'B', 'KB', 'MB', 'GB' ]
     let value = bytes
     let unitIndex = 0
     while (value >= 1024 && unitIndex < units.length - 1) {
@@ -378,7 +379,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .graph-tab
     min-height: 0

@@ -1,7 +1,8 @@
-import { definePackage, BunPm } from '@opk/ts-pkg'
+import { BunPm, definePackage, NodePm } from '@opk/ts-pkg'
 
 export default definePackage({
   pm: BunPm,
+  altPms: [ NodePm ],
   name: '@opk/gui',
   description: 'The GUI for Opk, the universal package manager for JS/TS.',
   version: '0.1.0',

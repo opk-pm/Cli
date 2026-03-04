@@ -38,7 +38,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .tabs-wrap
     display: flex

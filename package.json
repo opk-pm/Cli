@@ -1,6 +1,6 @@
 {
   "name": "opk-pm",
-  "version": "0.6.0-beta1",
+  "version": "0.6.0-beta2",
   "description": "The universal package manager for JS/TS.",
   "keywords": [
     "opk",
@@ -31,16 +31,29 @@
     "build": "bun run build.ts",
     "build:watch": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "dev": "bun run src/cli.ts help"
+    "dev": "bun run src/cli.ts help",
+    "prettier": "prettier --write --experimental-cli --ignore-path .prettierignore .",
+    "lint": "eslint . --fix",
+    "format": "opk run prettier && opk run lint"
   },
   "dependencies": {
-    "@opk/ts-pkg": "^0.6.0"
+    "@opk/ts-pkg": "^0.6.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "typescript": "6.0.0-beta"
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint": "9",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-import-typescript": "^0.0.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jiti": "^2.6.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vue-eslint-parser": "^10.4.0"
+  },
+  "engines": {
+    "node": ">=22",
+    "bun": ">=1.3.5"
   },
   "private": false
 }

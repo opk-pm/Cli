@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
   import { computed } from 'vue'
+
   import type { CommandResult } from '@/types'
 
   const props = defineProps<{
@@ -11,7 +12,7 @@
     (event: 'clear'): void
   }>()
 
-  const latestFirst = computed(() => [...props.entries].reverse())
+  const latestFirst = computed(() => [ ...props.entries ].reverse())
   const BASIC_COLORS = [
     '#1f2330',
     '#ff5f87',
@@ -88,7 +89,7 @@
   }
 
   function parseCodes(raw: string): number[] {
-    if (!raw) return [0]
+    if (!raw) return [ 0 ]
     return raw
       .split(';')
       .map(part => Number.parseInt(part, 10))
@@ -174,8 +175,8 @@
       }
 
       if ((code === 38 || code === 48) && codes[index + 1] === 2) {
-        const [r, g, b] = [codes[index + 2], codes[index + 3], codes[index + 4]]
-        if ([r, g, b].every(channel => typeof channel === 'number')) {
+        const [ r, g, b ] = [ codes[index + 2], codes[index + 3], codes[index + 4] ]
+        if ([ r, g, b ].every(channel => typeof channel === 'number')) {
           const color = `rgb(${r}, ${g}, ${b})`
           if (code === 38) state.foreground = color
           if (code === 48) state.background = color
@@ -223,7 +224,7 @@
       const r = Math.floor(value / 36)
       const g = Math.floor((value % 36) / 6)
       const b = value % 6
-      const levels = [0, 95, 135, 175, 215, 255]
+      const levels = [ 0, 95, 135, 175, 215, 255 ]
       return rgbToHex(levels[r]!, levels[g]!, levels[b]!)
     }
     if (index <= 255) {
@@ -302,7 +303,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .command-output
     height: 100%

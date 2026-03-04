@@ -1,12 +1,14 @@
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
+import { createInterface } from 'node:readline/promises'
+
 import { writePackageJson } from '@opk/ts-pkg'
-import { detectPmSelection, loadConfig, syncAndGenerate } from '../core/config'
-import { exists } from '../core/fs'
-import type { ModuleType } from '../types'
-import { C, paint } from '../ui/colors'
+
+import { detectPmSelection, loadConfig, syncAndGenerate } from '@/core/config'
+import { exists } from '@/core/fs'
+import type { ModuleType } from '@/types'
+import { C, paint } from '@/ui/colors'
 
 function escapeSingleQuotes(value: string): string {
   return value.replace(/'/g, "\\'")

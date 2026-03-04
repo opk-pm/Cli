@@ -1,8 +1,9 @@
 import { spawn } from 'node:child_process'
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { homedir } from 'node:os'
 import { basename, resolve } from 'node:path'
+
 import type { Connect } from 'vite'
 
 interface ApiOptions {
@@ -310,7 +311,7 @@ async function handleProjectPackages(
     return {
       section,
       entries: Object.entries(deps)
-        .map(([name, version]) => ({ name, version }))
+        .map(([ name, version ]) => ({ name, version }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     }
   })
@@ -362,8 +363,8 @@ async function handleRunOpk(
   }
 
   const stdin = typeof body.stdin === 'string' ? body.stdin : ''
-  const cliEntry = resolve(options.repoRoot, 'src/cli.ts')
-  const commandArgs = ['run', cliEntry, ...args]
+  const cliEntry = resolve(options.repoRoot, '@/cli.ts')
+  const commandArgs = [ 'run', cliEntry, ...args ]
 
   const { exitCode, stdout, stderr } = await spawnAndCollect(
     'bun',
@@ -375,7 +376,7 @@ async function handleRunOpk(
   sendJson(res, 200, {
     result: {
       args,
-      command: ['bun', ...commandArgs].join(' '),
+      command: [ 'bun', ...commandArgs ].join(' '),
       exitCode,
       stdout,
       stderr,
@@ -465,7 +466,7 @@ async function buildDependencyGraph(
       } else {
         const packages = asRecord(lock.packages)
         if (packages) {
-          for (const [entryPath, meta] of Object.entries(packages)) {
+          for (const [ entryPath, meta ] of Object.entries(packages)) {
             if (!entryPath) continue
             if (nodes.size >= MAX_GRAPH_NODES) break
             const metaRecord = asRecord(meta)
@@ -502,7 +503,7 @@ async function buildDependencyGraph(
       >
       const packages = asRecord(lock.packages)
       if (packages) {
-        for (const [key, value] of Object.entries(packages)) {
+        for (const [ key, value ] of Object.entries(packages)) {
           if (nodes.size >= MAX_GRAPH_NODES) break
           const meta = Array.isArray(value) ? {} : (asRecord(value) ?? {})
           const name = extractNameFromSpec(key)
@@ -535,7 +536,7 @@ async function buildDependencyGraph(
 
   for (const section of fallbackSections) {
     const deps = normalizeRecord(section)
-    for (const [name, version] of Object.entries(deps)) {
+    for (const [ name, version ] of Object.entries(deps)) {
       if (nodes.size >= MAX_GRAPH_NODES) break
       const id = addNode(name, version)
       addEdge('root', id)
@@ -559,7 +560,7 @@ function walkPackageLockDeps(
 ): void {
   if (depth > MAX_GRAPH_DEPTH) return
 
-  for (const [name, rawMeta] of Object.entries(deps)) {
+  for (const [ name, rawMeta ] of Object.entries(deps)) {
     const meta = asRecord(rawMeta) ?? {}
     const version = asString(meta.version)
     const id = addNode(name, version)
@@ -581,7 +582,7 @@ async function spawnAndCollect(
     const child = spawn(command, args, {
       cwd,
       env: process.env,
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: [ 'pipe', 'pipe', 'pipe' ],
     })
 
     let stdout = ''
@@ -613,33 +614,6 @@ async function spawnAndCollect(
     }
     child.stdin.end()
   })
-}
-
-async function fetchRegistryPackages(
-  query: string,
-  size: number
-): Promise<RegistryPackageSummary[]> {
-  const searchText = query || 'keywords:*'
-  const endpoint = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(searchText)}&size=${size}&from=0`
-  const response = await fetch(endpoint, {
-    headers: { Accept: 'application/json' },
-  })
-
-  if (!response.ok) {
-    throw new ApiError(
-      502,
-      `Failed to fetch registry packages (${response.status} ${response.statusText})`
-    )
-  }
-
-  const payload = (await response.json()) as {
-    objects?: Array<Record<string, unknown>>
-  }
-  const packages = (payload.objects ?? [])
-    .map(item => toRegistrySummary(item))
-    .filter(Boolean) as RegistryPackageSummary[]
-  packages.sort((a, b) => dateScore(b.updatedAt) - dateScore(a.updatedAt))
-  return packages
 }
 
 async function parseDirectoryInput(
@@ -715,7 +689,7 @@ async function writeStoredProjects(projects: ProjectRecord[]): Promise<void> {
 
 function dedupeProjects(projects: ProjectRecord[]): ProjectRecord[] {
   const seen = new Set<string>()
-  const sorted = [...projects].sort((a, b) =>
+  const sorted = [ ...projects ].sort((a, b) =>
     a.addedAt.localeCompare(b.addedAt)
   )
 
@@ -797,8 +771,8 @@ function normalizeRecord(value: unknown): Record<string, string> {
     return {}
   }
   const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, version]) => typeof version === 'string')
-    .map(([name, version]) => [name, version as string])
+    .filter(([ , version ]) => typeof version === 'string')
+    .map(([ name, version ]) => [ name, version as string ])
   return Object.fromEntries(entries)
 }
 
@@ -850,20 +824,6 @@ function extractNameFromSpec(spec: string): string {
 function extractNameFromPackagePath(pathValue: string): string {
   const parts = pathValue.split('node_modules/').filter(Boolean)
   return parts[parts.length - 1] ?? pathValue
-}
-
-function extractPackageScope(packageName: string): string | null {
-  if (!packageName.startsWith('@')) return null
-  const splitAt = packageName.indexOf('/')
-  return splitAt > 1 ? packageName.slice(0, splitAt) : null
-}
-
-function resolveNodeModulesPackagePath(
-  projectPath: string,
-  packageName: string
-): string {
-  const segments = packageName.split('/').filter(Boolean)
-  return resolve(projectPath, 'node_modules', ...segments)
 }
 
 async function enrichGraphNodeSizes(

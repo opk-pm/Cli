@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
+
   import type { TreeNode } from '@/types'
 
   defineOptions({
@@ -66,7 +67,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .tree-node
     list-style: none

@@ -1,12 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+
 import {
   detectPmSelection,
   runPrettierWritePackageTs,
   shouldFormatPackageTs,
-} from '../core/config'
-import { exists } from '../core/fs'
-import { C, paint } from '../ui/colors'
+} from '@/core/config'
+import { exists } from '@/core/fs'
+import { C, paint } from '@/ui/colors'
 
 type JsonValue =
   | string

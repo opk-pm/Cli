@@ -1,5 +1,6 @@
+import pkg, { CmdName, Logo } from 'package'
+
 import { C, paint } from './colors'
-import pkg, { Logo, CmdName } from '../../package'
 
 // Formatted Elements
 const Bullet: string = paint('∙', C.dim)

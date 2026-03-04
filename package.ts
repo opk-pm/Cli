@@ -32,10 +32,10 @@ This feature is experimental! Try with the opk gui command.
 
 export default definePackage({
   pm: BunPm,
-  altPms: [NodePm],
+  altPms: [ NodePm ],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.6.0-beta1',
+  version: '0.6.0-beta2',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   homepage: 'https://opk.a35.dev/',
@@ -59,20 +59,39 @@ export default definePackage({
     opk: './dist/cli.js',
     opx: './dist/opx.js',
   },
-  files: ['dist'],
-  scriptPresets: ['typescript', 'prettier'],
+  files: [ 'dist' ],
+  scriptPresets: [ 'typescript' ],
   scripts: {
+    // run
     build: 'bun run build.ts',
     dev: 'bun run src/cli.ts help',
+
+    // code style
+    prettier:
+      'prettier --write --experimental-cli --ignore-path .prettierignore .',
+    lint: 'eslint . --fix',
+    format: 'opk run prettier && opk run lint',
   },
 
   devDependencies: {
     '@types/bun': 'latest',
-    typescript: '6.0.0-beta',
+    '@typescript-eslint/parser': '^8.56.1',
+    eslint: '9',
+    'eslint-plugin-import': '^2.32.0',
+    'eslint-plugin-import-typescript': '^0.0.4',
+    'eslint-plugin-simple-import-sort': '^12.1.1',
+    jiti: '^2.6.1',
+    prettier: '^3.8.1',
+    typescript: '^5.9.3',
+    'vue-eslint-parser': '^10.4.0',
   },
   dependencies: {
-    '@opk/ts-pkg': '^0.6.0',
+    '@opk/ts-pkg': '^0.6.1',
   },
 
+  engines: {
+    node: '>=22',
+    bun: '>=1.3.5',
+  },
   private: false,
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
   import { computed, ref } from 'vue'
+
   import type { CommandRequest, PackageSection } from '@/types'
 
   const props = defineProps<{
@@ -34,7 +35,7 @@
     const packageName = packageInput.value.trim()
     if (!packageName) return
 
-    const args = [mode.value, packageName]
+    const args = [ mode.value, packageName ]
     if (mode.value === 'add') {
       if (scope.value === 'dev') args.push('--dev')
       if (scope.value === 'peer') args.push('--peer')
@@ -151,7 +152,7 @@
 </template>
 
 <style scoped lang="sass">
-  @use '../../styles/tokens' as *
+  @use '@/styles/tokens' as *
 
   .packages-tab
     display: grid
