@@ -30,7 +30,9 @@
       <span class="status-bar__name">
         {{ props.info?.name ?? 'No project selected' }}
       </span>
-      <IconBadge v-if="props.info?.version">v{{ props.info.version }}</IconBadge>
+      <IconBadge v-if="props.info?.version"
+        >v{{ props.info.version }}</IconBadge
+      >
     </div>
 
     <div class="status-bar__meta">
@@ -45,7 +47,9 @@
       </IconBadge>
       <IconBadge
         icon="solar:lock-keyhole-bold-duotone"
-        :tone="(props.info?.lockfiles.length ?? 0) === 0 ? 'warning' : 'default'"
+        :tone="
+          (props.info?.lockfiles.length ?? 0) === 0 ? 'warning' : 'default'
+        "
       >
         {{ props.info?.lockfiles.length ?? 0 }} lockfiles
       </IconBadge>

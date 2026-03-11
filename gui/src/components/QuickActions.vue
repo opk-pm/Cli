@@ -4,8 +4,8 @@
 
   import ActionTileButton from '@/components/base/ActionTileButton.vue'
   import PanelHeader from '@/components/base/PanelHeader.vue'
-  import { pathLeaf } from '@/utils/path'
   import type { CommandRequest } from '@/types'
+  import { pathLeaf } from '@/utils/path'
 
   const props = defineProps<{
     projectPath: string | null
@@ -96,10 +96,7 @@
 
 <template>
   <section class="panel">
-    <PanelHeader
-      icon="solar:flash-circle-bold-duotone"
-      title="Quick Actions"
-    >
+    <PanelHeader icon="solar:flash-circle-bold-duotone" title="Quick Actions">
       <button
         class="btn btn--primary btn--tiny"
         type="button"

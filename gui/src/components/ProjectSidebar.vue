@@ -2,12 +2,12 @@
   import { Icon } from '@iconify/vue'
   import { ref } from 'vue'
 
-  import { pathLeaf } from '@/utils/path'
   import type {
     DependencyDropScope,
     DraggedDependency,
     ProjectRecord,
   } from '@/types'
+  import { pathLeaf } from '@/utils/path'
 
   const props = defineProps<{
     projects: ProjectRecord[]
@@ -60,7 +60,6 @@
       scope,
     })
   }
-
 </script>
 
 <template>

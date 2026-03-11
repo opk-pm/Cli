@@ -574,7 +574,10 @@ function runOpkStream(
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        writeEvent({ type: 'error', message: `Failed to run opk command: ${message}` })
+        writeEvent({
+          type: 'error',
+          message: `Failed to run opk command: ${message}`,
+        })
         writeEvent({ type: 'exit', exitCode: 1 })
         controller.close()
         return

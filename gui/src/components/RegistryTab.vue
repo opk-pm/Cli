@@ -5,8 +5,8 @@
   import IconBadge from '@/components/base/IconBadge.vue'
   import PanelHeader from '@/components/base/PanelHeader.vue'
   import { getRegistryPackages } from '@/services/api'
-  import { pathLeaf } from '@/utils/path'
   import type { CommandRequest, ProjectRecord, RegistryPackage } from '@/types'
+  import { pathLeaf } from '@/utils/path'
 
   const props = defineProps<{
     projects: ProjectRecord[]

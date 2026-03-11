@@ -38,7 +38,10 @@
     new Array(GRAPH_NODE_COLOR_VARS.length).fill('currentColor')
   )
   const ROOT_NODE_COLOR = readThemeColor('--graph-node-root', 'currentColor')
-  const TOOLTIP_BACKGROUND = readThemeColor('--theme-surface-tooltip', 'transparent')
+  const TOOLTIP_BACKGROUND = readThemeColor(
+    '--theme-surface-tooltip',
+    'transparent'
+  )
   const TOOLTIP_BORDER = readThemeColor('--theme-line-tooltip', 'currentColor')
   const TOOLTIP_TEXT = readThemeColor('--theme-text-tooltip', 'currentColor')
   const NODE_BORDER = readThemeColor('--theme-line-white-soft', 'currentColor')

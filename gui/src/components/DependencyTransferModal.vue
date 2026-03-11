@@ -3,8 +3,8 @@
   import { computed, ref, watch } from 'vue'
 
   import IconBadge from '@/components/base/IconBadge.vue'
-  import { pathLeaf } from '@/utils/path'
   import type { DependencyTransferRequest } from '@/types'
+  import { pathLeaf } from '@/utils/path'
 
   const props = defineProps<{
     modelValue: boolean
@@ -45,7 +45,11 @@
 
 <template>
   <Teleport to="body">
-    <div v-if="props.modelValue && props.transfer" class="modal-wrap" @click.self="close">
+    <div
+      v-if="props.modelValue && props.transfer"
+      class="modal-wrap"
+      @click.self="close"
+    >
       <section class="modal-panel">
         <header class="modal-panel__header">
           <h2>
@@ -62,24 +66,25 @@
             <IconBadge>{{ props.transfer.dependency.version }}</IconBadge>
             <IconBadge icon="solar:folder-open-bold-duotone">
               from
-              {{ pathLeaf(props.transfer.dependency.sourceProjectPath, 'project') }}
+              {{
+                pathLeaf(props.transfer.dependency.sourceProjectPath, 'project')
+              }}
             </IconBadge>
             <IconBadge icon="solar:folder-with-files-bold-duotone">
               to
               {{ pathLeaf(props.transfer.targetProjectPath, 'project') }}
             </IconBadge>
-            <IconBadge icon="solar:layers-minimalistic-bold-duotone" tone="warning">
+            <IconBadge
+              icon="solar:layers-minimalistic-bold-duotone"
+              tone="warning"
+            >
               {{ targetScopeLabel }}
             </IconBadge>
           </div>
 
           <div class="strategy-grid">
             <label class="strategy-option">
-              <input
-                v-model="strategy"
-                type="radio"
-                value="same"
-              />
+              <input v-model="strategy" type="radio" value="same" />
               <span>
                 Use source version
                 <strong>{{ props.transfer.dependency.version }}</strong>
@@ -87,11 +92,7 @@
             </label>
 
             <label class="strategy-option">
-              <input
-                v-model="strategy"
-                type="radio"
-                value="latest"
-              />
+              <input v-model="strategy" type="radio" value="latest" />
               <span>Use latest available version</span>
             </label>
           </div>

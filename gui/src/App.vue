@@ -10,8 +10,8 @@
 
   import AddProjectModal from '@/components/AddProjectModal.vue'
   import CommandOutput from '@/components/CommandOutput.vue'
-  import DependencyTransferModal from '@/components/DependencyTransferModal.vue'
   import DependencyGraphTab from '@/components/DependencyGraphTab.vue'
+  import DependencyTransferModal from '@/components/DependencyTransferModal.vue'
   import EmptyState from '@/components/EmptyState.vue'
   import NavigationTabs, {
     type NavigationTab,
@@ -261,32 +261,37 @@
     commandControllers.set(entryId, controller)
 
     try {
-      await runOpkCommandStream(targetPath, command, {
-        onMeta: event => {
-          entry.args = [ ...event.args ]
-          entry.command = event.command
-          entry.createdAt = event.createdAt
+      await runOpkCommandStream(
+        targetPath,
+        command,
+        {
+          onMeta: event => {
+            entry.args = [ ...event.args ]
+            entry.command = event.command
+            entry.createdAt = event.createdAt
+          },
+          onStdout: chunk => {
+            entry.stdout += chunk
+            entry.output += chunk
+          },
+          onStderr: chunk => {
+            entry.stderr += chunk
+            entry.output += chunk
+          },
+          onError: message => {
+            globalError.value = message
+            entry.stderr += entry.stderr ? `\n${message}` : message
+            entry.output += entry.output ? `\n${message}` : message
+          },
+          onExit: exitCode => {
+            entry.exitCode = exitCode
+            entry.running = false
+          },
         },
-        onStdout: chunk => {
-          entry.stdout += chunk
-          entry.output += chunk
-        },
-        onStderr: chunk => {
-          entry.stderr += chunk
-          entry.output += chunk
-        },
-        onError: message => {
-          globalError.value = message
-          entry.stderr += entry.stderr ? `\n${message}` : message
-          entry.output += entry.output ? `\n${message}` : message
-        },
-        onExit: exitCode => {
-          entry.exitCode = exitCode
-          entry.running = false
-        },
-      }, {
-        signal: controller.signal,
-      })
+        {
+          signal: controller.signal,
+        }
+      )
     } catch (error) {
       if (stopRequestedCommandIds.has(entry.id) || isAbortError(error)) {
         const stopped = '[stopped by user]'

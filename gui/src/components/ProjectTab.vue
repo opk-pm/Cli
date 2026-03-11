@@ -53,10 +53,7 @@
       </section>
 
       <section class="panel">
-        <PanelHeader
-          icon="solar:file-bold-duotone"
-          title="Workspace Health"
-        />
+        <PanelHeader icon="solar:file-bold-duotone" title="Workspace Health" />
         <div class="chip-list health-grid">
           <IconBadge
             icon="solar:code-file-bold-duotone"

@@ -44,7 +44,10 @@
     BRIGHT_COLOR_VARS,
     new Array(BRIGHT_COLOR_VARS.length).fill('currentColor')
   )
-  const DEFAULT_TEXT_COLOR = readThemeColor('--theme-text-command', 'currentColor')
+  const DEFAULT_TEXT_COLOR = readThemeColor(
+    '--theme-text-command',
+    'currentColor'
+  )
 
   const activeEntryId = ref<string | null>(null)
   const tabEntries = computed(() => [ ...props.entries ].reverse())
@@ -53,7 +56,8 @@
   )
   const activeEntry = computed(() => {
     if (props.entries.length === 0) return null
-    if (!activeEntryId.value) return props.entries[props.entries.length - 1] ?? null
+    if (!activeEntryId.value)
+      return props.entries[props.entries.length - 1] ?? null
     return props.entries.find(entry => entry.id === activeEntryId.value) ?? null
   })
 
@@ -68,7 +72,9 @@
         activeEntryId.value = props.entries[nextCount - 1]?.id ?? null
         return
       }
-      const stillExists = props.entries.some(entry => entry.id === activeEntryId.value)
+      const stillExists = props.entries.some(
+        entry => entry.id === activeEntryId.value
+      )
       if (!stillExists) {
         activeEntryId.value = props.entries[nextCount - 1]?.id ?? null
       }
@@ -102,7 +108,9 @@
     return `exit ${entry.exitCode ?? 1}`
   }
 
-  function statusTone(entry: CommandResult): 'default' | 'success' | 'warning' | 'danger' {
+  function statusTone(
+    entry: CommandResult
+  ): 'default' | 'success' | 'warning' | 'danger' {
     if (entry.running) return 'warning'
     if (entry.exitCode === 0) return 'success'
     return 'danger'
@@ -355,7 +363,8 @@
             class="command-tab__status"
             :class="{
               'command-tab__status--ok': !entry.running && entry.exitCode === 0,
-              'command-tab__status--error': !entry.running && entry.exitCode !== 0,
+              'command-tab__status--error':
+                !entry.running && entry.exitCode !== 0,
             }"
           />
         </button>
@@ -366,8 +375,10 @@
         class="command-entry"
         :class="{
           'command-entry--running': activeEntry.running,
-          'command-entry--error': !activeEntry.running && activeEntry.exitCode !== 0,
-          'command-entry--ok': !activeEntry.running && activeEntry.exitCode === 0,
+          'command-entry--error':
+            !activeEntry.running && activeEntry.exitCode !== 0,
+          'command-entry--ok':
+            !activeEntry.running && activeEntry.exitCode === 0,
         }"
       >
         <header class="command-entry__head">
@@ -380,7 +391,9 @@
           </IconBadge>
         </header>
         <p class="command-entry__cmd">{{ activeEntry.command }}</p>
-        <pre class="command-entry__body"><code v-html="renderOutput(activeEntry)" /></pre>
+        <pre
+          class="command-entry__body"
+        ><code v-html="renderOutput(activeEntry)" /></pre>
       </article>
     </div>
   </section>
