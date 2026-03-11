@@ -8,16 +8,16 @@
 
 =soft-scrollbar
   scrollbar-width: thin
-  scrollbar-color: rgba(170, 190, 255, 0.35) transparent
+  scrollbar-color: $line-scrollbar transparent
   &::-webkit-scrollbar
     width: 10px
     height: 10px
   &::-webkit-scrollbar-thumb
-    background: rgba(170, 190, 255, 0.26)
+    background: $line-scrollbar-thumb
     border-radius: 999px
   &::-webkit-scrollbar-track
     background: transparent
 
 =focus-ring
-  outline: 2px solid rgb(160 112 255 / 0.75)
+  outline: 2px solid $accent-ring
   outline-offset: 2px

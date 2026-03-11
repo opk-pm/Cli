@@ -1,7 +1,10 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
-  import { computed, ref } from 'vue'
+  import { ref } from 'vue'
 
+  import ActionTileButton from '@/components/base/ActionTileButton.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
+  import { pathLeaf } from '@/utils/path'
   import type { CommandRequest } from '@/types'
 
   const props = defineProps<{
@@ -15,7 +18,13 @@
 
   const customCommand = ref('')
 
-  const quickButtons = computed(() => [
+  interface QuickButton {
+    label: string
+    icon: string
+    args: string[]
+  }
+
+  const quickButtons: QuickButton[] = [
     {
       label: 'Install',
       icon: 'solar:download-bold-duotone',
@@ -46,17 +55,20 @@
       icon: 'solar:transfer-horizontal-bold-duotone',
       args: [ 'migrate' ],
     },
-  ])
-
-  function projectNameFromPath(path: string | null): string {
-    if (!path) return 'my-project'
-    const normalized = path.replace(/\\/g, '/')
-    const parts = normalized.split('/').filter(Boolean)
-    return parts[parts.length - 1] ?? 'my-project'
-  }
+    {
+      label: 'List',
+      icon: 'solar:list-bold-duotone',
+      args: [ 'list' ],
+    },
+    {
+      label: 'Outdated',
+      icon: 'solar:sort-by-time-bold-duotone',
+      args: [ 'outdated', '--list' ],
+    },
+  ]
 
   function runInitDefault(): void {
-    const name = projectNameFromPath(props.projectPath)
+    const name = pathLeaf(props.projectPath, 'my-project')
     emit('run', {
       label: 'Initialize project',
       args: [ 'init' ],
@@ -64,8 +76,11 @@
     })
   }
 
-  function runQuickAction(command: CommandRequest): void {
-    emit('run', command)
+  function runQuickAction(button: QuickButton): void {
+    emit('run', {
+      label: button.label,
+      args: button.args,
+    })
   }
 
   function runCustomCommand(): void {
@@ -81,11 +96,10 @@
 
 <template>
   <section class="panel">
-    <div class="title-row">
-      <h3 class="title-row__heading">
-        <Icon icon="solar:flash-circle-bold-duotone" />
-        <span>Quick Actions</span>
-      </h3>
+    <PanelHeader
+      icon="solar:flash-circle-bold-duotone"
+      title="Quick Actions"
+    >
       <button
         class="btn btn--primary btn--tiny"
         type="button"
@@ -95,20 +109,17 @@
         <Icon icon="solar:magic-stick-2-bold-duotone" />
         <span>Init with defaults</span>
       </button>
-    </div>
+    </PanelHeader>
 
     <div class="actions-grid">
-      <button
+      <ActionTileButton
         v-for="button in quickButtons"
         :key="button.label"
-        class="btn btn--ghost action-btn"
-        type="button"
+        :icon="button.icon"
+        :label="button.label"
         :disabled="props.busy || !props.projectPath"
-        @click="runQuickAction({ label: button.label, args: button.args })"
-      >
-        <Icon :icon="button.icon" />
-        <span>{{ button.label }}</span>
-      </button>
+        @click="runQuickAction(button)"
+      />
     </div>
 
     <div class="custom-command">
@@ -143,10 +154,6 @@
     display: grid
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))
     gap: 10px
-
-  .action-btn
-    justify-content: flex-start
-    min-height: 40px
 
   .custom-command
     margin-top: 12px

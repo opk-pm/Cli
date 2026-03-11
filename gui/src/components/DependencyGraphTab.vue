@@ -3,6 +3,9 @@
   import * as echarts from 'echarts'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
+  import { readThemeColor, readThemeColorList } from '@/styles/runtimeTheme'
   import type { DependencyGraph, GraphNode } from '@/types'
 
   interface GroupedNode {
@@ -20,16 +23,25 @@
     to: string
   }
 
-  const NODE_PALETTE = [
-    '#78a6ff',
-    '#66d3ae',
-    '#ffc674',
-    '#ff96be',
-    '#9acbff',
-    '#c4a2ff',
-    '#74e4d0',
-    '#d9b5ff',
-  ]
+  const GRAPH_NODE_COLOR_VARS = [
+    '--graph-node-0',
+    '--graph-node-1',
+    '--graph-node-2',
+    '--graph-node-3',
+    '--graph-node-4',
+    '--graph-node-5',
+    '--graph-node-6',
+    '--graph-node-7',
+  ] as const
+  const NODE_PALETTE = readThemeColorList(
+    GRAPH_NODE_COLOR_VARS,
+    new Array(GRAPH_NODE_COLOR_VARS.length).fill('currentColor')
+  )
+  const ROOT_NODE_COLOR = readThemeColor('--graph-node-root', 'currentColor')
+  const TOOLTIP_BACKGROUND = readThemeColor('--theme-surface-tooltip', 'transparent')
+  const TOOLTIP_BORDER = readThemeColor('--theme-line-tooltip', 'currentColor')
+  const TOOLTIP_TEXT = readThemeColor('--theme-text-tooltip', 'currentColor')
+  const NODE_BORDER = readThemeColor('--theme-line-white-soft', 'currentColor')
 
   const props = defineProps<{
     graph: DependencyGraph | null
@@ -110,9 +122,9 @@
       animationDuration: 420,
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'rgba(10, 14, 24, 0.96)',
-        borderColor: 'rgba(135, 172, 255, 0.28)',
-        textStyle: { color: '#dce7ff' },
+        backgroundColor: TOOLTIP_BACKGROUND,
+        borderColor: TOOLTIP_BORDER,
+        textStyle: { color: TOOLTIP_TEXT },
         formatter: params => {
           const data = params.data as
             | (GroupedNode & { name: string })
@@ -143,7 +155,7 @@
           },
           label: {
             show: true,
-            color: '#dce7ff',
+            color: TOOLTIP_TEXT,
             fontSize: 11,
             formatter: params => {
               const data = params.data as GroupedNode & { name: string }
@@ -168,7 +180,7 @@
             symbolSize: computeNodeSize(node, minSize, maxSize),
             itemStyle: {
               color: node.color,
-              borderColor: 'rgba(255,255,255,0.18)',
+              borderColor: NODE_BORDER,
               borderWidth: node.kind === 'root' ? 1.6 : 1,
             },
           })),
@@ -275,7 +287,7 @@
   }
 
   function colorForNode(key: string, kind: GroupedNode['kind']): string {
-    if (kind === 'root') return '#8bb4ff'
+    if (kind === 'root') return ROOT_NODE_COLOR
     const index = Math.abs(hashCode(key)) % NODE_PALETTE.length
     return NODE_PALETTE[index]
   }
@@ -314,27 +326,20 @@
 <template>
   <section v-if="props.graph" class="graph-tab">
     <div class="panel graph-head">
-      <h3 class="panel-title">
-        <Icon icon="solar:graph-bold-duotone" />
-        <span>Dependency Graph</span>
-      </h3>
-      <div class="graph-head__meta">
-        <span class="badge">
-          <Icon icon="solar:database-bold-duotone" />
+      <PanelHeader icon="solar:graph-bold-duotone" title="Dependency Graph" />
+      <div class="graph-head__meta chip-list">
+        <IconBadge icon="solar:database-bold-duotone">
           Source: {{ props.graph.source }}
-        </span>
-        <span class="badge">
-          <Icon icon="solar:nodes-bold-duotone" />
+        </IconBadge>
+        <IconBadge icon="solar:nodes-bold-duotone">
           {{ groupedGraph.nodes.length }} grouped nodes
-        </span>
-        <span class="badge">
-          <Icon icon="solar:link-bold-duotone" />
+        </IconBadge>
+        <IconBadge icon="solar:link-bold-duotone">
           {{ groupedGraph.edges.length }} grouped edges
-        </span>
-        <span class="badge">
-          <Icon icon="solar:chart-square-bold-duotone" />
+        </IconBadge>
+        <IconBadge icon="solar:chart-square-bold-duotone">
           Install size: {{ formatBytes(totalInstallSize) }}
-        </span>
+        </IconBadge>
       </div>
     </div>
 
@@ -351,10 +356,10 @@
       </section>
 
       <section class="panel graph-size-panel">
-        <h3 class="panel-title">
-          <Icon icon="solar:sort-by-time-bold-duotone" />
-          <span>Largest groups</span>
-        </h3>
+        <PanelHeader
+          icon="solar:sort-by-time-bold-duotone"
+          title="Largest groups"
+        />
         <div class="size-list">
           <div v-for="node in topHeavyNodes" :key="node.id" class="size-item">
             <span class="size-item__name">
@@ -364,9 +369,9 @@
               />
               <span>{{ node.label }}</span>
             </span>
-            <span class="badge">
+            <IconBadge>
               {{ formatBytes(node.sizeBytes) }} · {{ node.members }} node(s)
-            </span>
+            </IconBadge>
           </div>
         </div>
       </section>
@@ -390,11 +395,6 @@
   .graph-head
     display: grid
     gap: 8px
-
-  .graph-head__meta
-    display: flex
-    gap: 8px
-    flex-wrap: wrap
 
   .graph-canvas-panel
     min-height: 0
@@ -424,7 +424,7 @@
     gap: 8px
     padding: 6px 8px
     border-radius: 8px
-    background: rgba(255, 255, 255, 0.03)
+    background: $surface-overlay
 
   .size-item__name
     min-width: 0
@@ -441,5 +441,5 @@
     width: 10px
     height: 10px
     border-radius: 99px
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22)
+    box-shadow: 0 0 0 1px $line-white-strong
 </style>

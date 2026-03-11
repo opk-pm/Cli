@@ -441,7 +441,11 @@
                     :busy="loading.command"
                     @run="runCommand"
                   />
-                  <ProjectTab :info="projectInfo" />
+                  <ProjectTab
+                    :info="projectInfo"
+                    :busy="loading.command"
+                    @run="runCommand"
+                  />
                 </div>
               </template>
               <PackagesTab
@@ -453,6 +457,8 @@
               <ProjectTab
                 v-else-if="activeTab === 'project'"
                 :info="projectInfo"
+                :busy="loading.command"
+                @run="runCommand"
               />
               <DependencyGraphTab v-else :graph="dependencyGraph" />
             </section>

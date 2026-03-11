@@ -46,8 +46,8 @@
     flex-wrap: wrap
 
   .tab-btn
-    border: 1px solid rgb(208 170 255 / 0.16)
-    background: rgba(255, 255, 255, 0.03)
+    border: 1px solid $line-tab
+    background: $surface-overlay
     color: $text-secondary
     border-radius: 999px
     padding: 7px 14px
@@ -58,11 +58,11 @@
     cursor: pointer
     transition: 0.2s ease
     &:hover
-      border-color: rgba(170, 192, 255, 0.36)
+      border-color: $line-tab-hover
       color: $text-primary
 
   .tab-btn--active
-    border-color: rgb(171 123 255 / 0.42)
-    background: linear-gradient(180deg, rgb(169 112 255 / 0.24), rgb(140 84 224 / 0.18))
+    border-color: $line-tab-active
+    background: linear-gradient(180deg, $accent-gradient-tab-start, $accent-gradient-tab-end)
     color: $text-primary
 </style>

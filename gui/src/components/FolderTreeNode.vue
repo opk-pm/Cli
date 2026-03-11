@@ -82,10 +82,10 @@
     color: $text-secondary
     cursor: pointer
     &:hover
-      background: rgba(255, 255, 255, 0.04)
+      background: $surface-overlay-strong
 
   .tree-node__row--active
-    background: rgb(148 112 255 / 0.18)
+    background: $accent-bg-tree
     color: $text-primary
 
   .tree-node__toggle

@@ -2,7 +2,10 @@
   import { Icon } from '@iconify/vue'
   import { computed, onMounted, ref, watch } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
   import { getRegistryPackages } from '@/services/api'
+  import { pathLeaf } from '@/utils/path'
   import type { CommandRequest, ProjectRecord, RegistryPackage } from '@/types'
 
   const props = defineProps<{
@@ -22,6 +25,7 @@
   const targetProjectPath = ref<string | null>(props.defaultProjectPath)
 
   const canAdd = computed(() => !!targetProjectPath.value && !props.busy)
+  const canInspect = computed(() => !!targetProjectPath.value && !props.busy)
 
   watch(
     () => props.projects,
@@ -82,10 +86,14 @@
     })
   }
 
-  function projectName(path: string): string {
-    const normalized = path.replace(/\\/g, '/')
-    const parts = normalized.split('/').filter(Boolean)
-    return parts[parts.length - 1] ?? path
+  function inspectPackage(pkg: RegistryPackage): void {
+    if (!targetProjectPath.value) return
+
+    emit('run', {
+      label: `Info ${pkg.name}`,
+      args: [ 'info', pkg.name ],
+      path: targetProjectPath.value,
+    })
   }
 
   function formatUpdatedAt(value: string | null): string {
@@ -98,12 +106,7 @@
 <template>
   <section class="registry-tab">
     <section class="panel">
-      <div class="title-row">
-        <h3 class="title-row__heading">
-          <Icon icon="solar:archive-bold-duotone" />
-          <span>Registry Browser</span>
-        </h3>
-      </div>
+      <PanelHeader icon="solar:archive-bold-duotone" title="Registry Browser" />
 
       <div class="registry-tab__controls">
         <label class="field">
@@ -128,7 +131,7 @@
               :key="project.path"
               :value="project.path"
             >
-              {{ projectName(project.path) }}
+              {{ pathLeaf(project.path, project.path) }}
             </option>
           </select>
         </label>
@@ -145,17 +148,14 @@
     </section>
 
     <section class="panel registry-tab__results">
-      <div class="title-row">
-        <h3 class="title-row__heading">
-          <Icon icon="solar:box-bold-duotone" />
-          <span>{{
-            query.trim() ? 'Search Results' : 'Latest npm packages'
-          }}</span>
-        </h3>
-        <span class="badge">{{ packages.length }}</span>
-      </div>
+      <PanelHeader
+        icon="solar:box-bold-duotone"
+        :title="query.trim() ? 'Search Results' : 'Latest npm packages'"
+      >
+        <IconBadge>{{ packages.length }}</IconBadge>
+      </PanelHeader>
 
-      <div v-if="error" class="badge badge--danger">{{ error }}</div>
+      <IconBadge v-if="error" tone="danger">{{ error }}</IconBadge>
       <div v-else-if="packages.length === 0" class="empty-card">
         <Icon
           icon="solar:archive-minimalistic-bold-duotone"
@@ -173,7 +173,7 @@
           <header class="registry-item__head">
             <div>
               <h4>{{ pkg.name }}</h4>
-              <span class="badge">{{ pkg.version }}</span>
+              <IconBadge>{{ pkg.version }}</IconBadge>
             </div>
             <div class="registry-item__actions">
               <a
@@ -185,6 +185,15 @@
                 <Icon icon="solar:link-bold-duotone" />
                 <span>npm</span>
               </a>
+              <button
+                class="btn btn--ghost btn--tiny"
+                type="button"
+                :disabled="!canInspect"
+                @click="inspectPackage(pkg)"
+              >
+                <Icon icon="solar:info-circle-bold-duotone" />
+                <span>Info</span>
+              </button>
               <button
                 class="btn btn--primary btn--tiny"
                 type="button"
@@ -199,19 +208,19 @@
           <p class="registry-item__description muted">
             {{ pkg.description || 'No description' }}
           </p>
-          <footer class="registry-item__meta">
-            <span class="badge">
-              <Icon icon="solar:user-rounded-bold-duotone" />
+          <footer class="registry-item__meta chip-list">
+            <IconBadge icon="solar:user-rounded-bold-duotone">
               {{ pkg.publisher ?? 'unknown publisher' }}
-            </span>
-            <span class="badge">
-              <Icon icon="solar:clock-circle-bold-duotone" />
+            </IconBadge>
+            <IconBadge icon="solar:clock-circle-bold-duotone">
               {{ formatUpdatedAt(pkg.updatedAt) }}
-            </span>
-            <span v-if="pkg.keywords.length > 0" class="badge">
-              <Icon icon="solar:tag-bold-duotone" />
+            </IconBadge>
+            <IconBadge
+              v-if="pkg.keywords.length > 0"
+              icon="solar:tag-bold-duotone"
+            >
               {{ pkg.keywords.slice(0, 4).join(', ') }}
-            </span>
+            </IconBadge>
           </footer>
         </article>
       </div>
@@ -247,9 +256,9 @@
     padding-right: 2px
 
   .registry-item
-    border: 1px solid rgba(178, 196, 255, 0.16)
+    border: 1px solid $line-card
     border-radius: 10px
-    background: rgba(255, 255, 255, 0.02)
+    background: $surface-overlay-soft
     padding: 10px
     display: grid
     gap: 8px
@@ -270,11 +279,6 @@
   .registry-item__description
     margin: 0
     line-height: 1.4
-
-  .registry-item__meta
-    display: flex
-    gap: 6px
-    flex-wrap: wrap
 
   @media (max-width: 980px)
     .registry-tab__controls

@@ -2,6 +2,8 @@
   import { Icon } from '@iconify/vue'
   import { computed, ref } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
   import type { CommandRequest, PackageSection } from '@/types'
 
   const props = defineProps<{
@@ -53,12 +55,7 @@
 <template>
   <section class="packages-tab">
     <div class="panel">
-      <div class="title-row">
-        <h3 class="title-row__heading">
-          <Icon icon="solar:box-bold-duotone" />
-          <span>Package Actions</span>
-        </h3>
-      </div>
+      <PanelHeader icon="solar:box-bold-duotone" title="Package Actions" />
       <div class="packages-tab__controls">
         <label class="field">
           <span class="field__label">Action</span>
@@ -107,11 +104,10 @@
     </div>
 
     <div class="panel packages-tab__list">
-      <div class="title-row">
-        <h3 class="title-row__heading">
-          <Icon icon="solar:archive-minimalistic-bold-duotone" />
-          <span>Installed Packages</span>
-        </h3>
+      <PanelHeader
+        icon="solar:archive-minimalistic-bold-duotone"
+        title="Installed Packages"
+      >
         <label class="field">
           <span class="field__label">Search</span>
           <input
@@ -121,7 +117,7 @@
             placeholder="Filter by name or version"
           />
         </label>
-      </div>
+      </PanelHeader>
 
       <div v-if="filteredSections.length === 0" class="empty-list muted">
         No packages match your search.
@@ -134,7 +130,7 @@
         >
           <h4>
             {{ section.section }}
-            <span class="badge">{{ section.entries.length }}</span>
+            <IconBadge>{{ section.entries.length }}</IconBadge>
           </h4>
           <ul>
             <li
@@ -175,7 +171,7 @@
     border: 1px solid $line-soft
     border-radius: 12px
     padding: 10px 12px
-    background: rgba(255, 255, 255, 0.02)
+    background: $surface-overlay-soft
     h4
       margin: 0 0 8px
       display: flex
@@ -194,7 +190,7 @@
       gap: 12px
       padding: 6px 8px
       border-radius: 8px
-      background: rgba(255, 255, 255, 0.02)
+      background: $surface-overlay-soft
 
   .deps-name
     color: $text-primary

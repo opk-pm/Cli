@@ -16,7 +16,7 @@
 .btn
   border: 1px solid transparent
   border-radius: $radius-md
-  background: rgba(255, 255, 255, 0.03)
+  background: $surface-overlay
   color: $text-primary
   display: inline-flex
   align-items: center
@@ -42,18 +42,18 @@
     height: 1rem
 
 .btn--primary
-  border-color: rgba(121, 172, 255, 0.35)
+  border-color: $line-primary
   background: linear-gradient(180deg, $accent 0%, $accent-strong 100%)
-  color: #061027
+  color: $text-inverse
 
 .btn--ghost
   border-color: $line-soft
-  background: rgba(255, 255, 255, 0.02)
+  background: $surface-overlay-soft
 
 .btn--danger
-  border-color: rgba(255, 127, 158, 0.32)
-  background: rgba(255, 127, 158, 0.12)
-  color: #ffd4df
+  border-color: $line-danger-soft
+  background: $danger-bg-soft
+  color: $text-danger-soft
 
 .btn--tiny
   padding: 0.35rem 0.5rem
@@ -66,20 +66,20 @@
   padding: 5px 10px
   border-radius: 999px
   border: 1px solid $line-soft
-  background: rgba(255, 255, 255, 0.04)
+  background: $surface-overlay-strong
   color: $text-secondary
   font-size: 0.78rem
 
 .badge--success
-  border-color: rgba(88, 231, 168, 0.35)
+  border-color: $line-success
   color: $success
 
 .badge--warning
-  border-color: rgba(255, 211, 110, 0.32)
+  border-color: $line-warning
   color: $warning
 
 .badge--danger
-  border-color: rgba(255, 127, 158, 0.35)
+  border-color: $line-danger
   color: $danger
 
 .field
@@ -96,13 +96,13 @@
   min-height: 38px
   border-radius: $radius-sm
   border: 1px solid $line-soft
-  background: rgba(8, 12, 21, 0.85)
+  background: $surface-field
   color: $text-primary
   padding: 0 12px
   transition: border-color 0.2s ease
 
   &:focus-visible
-    border-color: rgb(164 112 255 / 0.62)
+    border-color: $accent-border-strong
     +focus-ring
 
 .title-row
@@ -125,3 +125,8 @@
   text-align: center
   gap: 12px
   color: $text-secondary
+
+.chip-list
+  display: flex
+  gap: 8px
+  flex-wrap: wrap

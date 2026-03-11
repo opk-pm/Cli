@@ -1,21 +1,35 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
 
-  import type { ProjectInfo } from '@/types'
+  import IconBadge from '@/components/base/IconBadge.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
+  import type { CommandRequest, ProjectInfo } from '@/types'
 
   const props = defineProps<{
     info: ProjectInfo | null
+    busy: boolean
   }>()
+
+  const emit = defineEmits<{
+    (event: 'run', command: CommandRequest): void
+  }>()
+
+  function runScript(script: string): void {
+    emit('run', {
+      label: `Run script: ${script}`,
+      args: [ 'run', script ],
+    })
+  }
 </script>
 
 <template>
   <section v-if="props.info" class="project-tab">
     <div class="split-grid">
       <section class="panel">
-        <h3 class="panel-title">
-          <Icon icon="solar:info-circle-bold-duotone" />
-          <span>Project Metadata</span>
-        </h3>
+        <PanelHeader
+          icon="solar:info-circle-bold-duotone"
+          title="Project Metadata"
+        />
         <dl class="meta-grid">
           <dt>Name</dt>
           <dd>{{ props.info.name }}</dd>
@@ -39,42 +53,38 @@
       </section>
 
       <section class="panel">
-        <h3 class="panel-title">
-          <Icon icon="solar:file-bold-duotone" />
-          <span>Workspace Health</span>
-        </h3>
-        <div class="chips-wrap">
-          <span
-            class="badge"
-            :class="{ 'badge--warning': !props.info.hasPackageTs }"
+        <PanelHeader
+          icon="solar:file-bold-duotone"
+          title="Workspace Health"
+        />
+        <div class="chip-list health-grid">
+          <IconBadge
+            icon="solar:code-file-bold-duotone"
+            :tone="props.info.hasPackageTs ? 'default' : 'warning'"
           >
-            <Icon icon="solar:code-file-bold-duotone" />
             package.ts {{ props.info.hasPackageTs ? 'present' : 'missing' }}
-          </span>
-          <span
-            class="badge"
-            :class="{ 'badge--warning': !props.info.hasPackageJson }"
+          </IconBadge>
+          <IconBadge
+            icon="solar:file-text-bold-duotone"
+            :tone="props.info.hasPackageJson ? 'default' : 'warning'"
           >
-            <Icon icon="solar:file-text-bold-duotone" />
             package.json {{ props.info.hasPackageJson ? 'present' : 'missing' }}
-          </span>
-          <span
-            class="badge"
-            :class="{ 'badge--warning': props.info.lockfiles.length === 0 }"
+          </IconBadge>
+          <IconBadge
+            icon="solar:lock-keyhole-bold-duotone"
+            :tone="props.info.lockfiles.length === 0 ? 'warning' : 'default'"
           >
-            <Icon icon="solar:lock-keyhole-bold-duotone" />
             {{ props.info.lockfiles.length }} lockfiles
-          </span>
+          </IconBadge>
         </div>
-        <div class="lockfiles-list">
-          <span
+        <div class="chip-list">
+          <IconBadge
             v-for="lockfile in props.info.lockfiles"
             :key="lockfile"
-            class="badge"
+            icon="solar:database-bold-duotone"
           >
-            <Icon icon="solar:database-bold-duotone" />
             {{ lockfile }}
-          </span>
+          </IconBadge>
           <span v-if="props.info.lockfiles.length === 0" class="muted">
             No lockfiles detected.
           </span>
@@ -83,18 +93,24 @@
     </div>
 
     <section class="panel">
-      <h3 class="panel-title">
-        <Icon icon="solar:play-circle-bold-duotone" />
-        <span>Scripts</span>
-      </h3>
+      <PanelHeader icon="solar:play-circle-bold-duotone" title="Scripts">
+        <IconBadge>{{ props.info.scripts.length }}</IconBadge>
+      </PanelHeader>
       <div v-if="props.info.scripts.length === 0" class="muted">
         No scripts found in package.json.
       </div>
       <div v-else class="scripts-grid">
-        <span v-for="script in props.info.scripts" :key="script" class="badge">
-          <Icon icon="solar:programming-bold-duotone" />
-          {{ script }}
-        </span>
+        <button
+          v-for="script in props.info.scripts"
+          :key="script"
+          class="btn btn--ghost btn--tiny script-btn"
+          type="button"
+          :disabled="props.busy"
+          @click="runScript(script)"
+        >
+          <Icon icon="solar:play-circle-bold-duotone" />
+          <span>{{ script }}</span>
+        </button>
       </div>
     </section>
   </section>
@@ -125,19 +141,14 @@
   .meta-grid__path
     overflow-wrap: anywhere
 
-  .chips-wrap
-    display: flex
-    gap: 8px
-    flex-wrap: wrap
+  .health-grid
     margin-bottom: 10px
 
-  .lockfiles-list
-    display: flex
-    gap: 8px
-    flex-wrap: wrap
-
   .scripts-grid
-    display: flex
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))
     gap: 8px
-    flex-wrap: wrap
+
+  .script-btn
+    justify-content: flex-start
 </style>

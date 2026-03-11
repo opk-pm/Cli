@@ -7,11 +7,11 @@
   overflow: hidden
   display: grid
   grid-template-columns: var(--sidebar-width, #{$sidebar-width}) 3px minmax(0, 1fr)
-  background: linear-gradient(145deg, rgb(16 11 30 / 0.9), rgb(11 7 18 / 0.95))
+  background: linear-gradient(145deg, $bg-shell-start, $bg-shell-end)
 
 .sidebar-column
   border-right: 1px solid $line-soft
-  background: linear-gradient(190deg, rgb(25 19 45 / 0.96), rgb(13 9 24 / 0.98))
+  background: linear-gradient(190deg, $bg-sidebar-start, $bg-sidebar-end)
   min-height: 0
   height: 100vh
   max-height: 100vh
@@ -29,9 +29,9 @@
 .panel-resizer--sidebar
   width: 3px
   cursor: col-resize
-  background: rgb(176 124 255 / 0.24)
+  background: $accent-bg-resizer
   &:hover
-    background: rgb(168 124 255 / 0.52)
+    background: $accent-bg-resizer-hover
 
 .workspace-column
   min-width: 0
@@ -82,9 +82,9 @@
   height: 3px
   cursor: row-resize
   border-radius: 2px
-  background: rgb(161 124 255 / 0.24)
+  background: $accent-bg-resizer-alt
   &:hover
-    background: rgb(168 124 255 / 0.52)
+    background: $accent-bg-resizer-hover
 
 .tab-content
   height: 100%

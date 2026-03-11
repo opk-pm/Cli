@@ -2,6 +2,9 @@
   import { Icon } from '@iconify/vue'
   import { computed } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
+  import PanelHeader from '@/components/base/PanelHeader.vue'
+  import { readThemeColor, readThemeColorList } from '@/styles/runtimeTheme'
   import type { CommandResult } from '@/types'
 
   const props = defineProps<{
@@ -13,26 +16,35 @@
   }>()
 
   const latestFirst = computed(() => [ ...props.entries ].reverse())
-  const BASIC_COLORS = [
-    '#1f2330',
-    '#ff5f87',
-    '#5fd7af',
-    '#ffd36e',
-    '#70a6ff',
-    '#ff8cd4',
-    '#56d0ff',
-    '#d5ddf6',
-  ]
-  const BRIGHT_COLORS = [
-    '#6f7896',
-    '#ff9ab4',
-    '#8ff2c0',
-    '#ffe49d',
-    '#9cc2ff',
-    '#ffc1ea',
-    '#99ecff',
-    '#ffffff',
-  ]
+  const BASIC_COLOR_VARS = [
+    '--ansi-basic-0',
+    '--ansi-basic-1',
+    '--ansi-basic-2',
+    '--ansi-basic-3',
+    '--ansi-basic-4',
+    '--ansi-basic-5',
+    '--ansi-basic-6',
+    '--ansi-basic-7',
+  ] as const
+  const BRIGHT_COLOR_VARS = [
+    '--ansi-bright-0',
+    '--ansi-bright-1',
+    '--ansi-bright-2',
+    '--ansi-bright-3',
+    '--ansi-bright-4',
+    '--ansi-bright-5',
+    '--ansi-bright-6',
+    '--ansi-bright-7',
+  ] as const
+  const BASIC_COLORS = readThemeColorList(
+    BASIC_COLOR_VARS,
+    new Array(BASIC_COLOR_VARS.length).fill('currentColor')
+  )
+  const BRIGHT_COLORS = readThemeColorList(
+    BRIGHT_COLOR_VARS,
+    new Array(BRIGHT_COLOR_VARS.length).fill('currentColor')
+  )
+  const DEFAULT_TEXT_COLOR = readThemeColor('--theme-text-command', 'currentColor')
 
   interface AnsiState {
     bold: boolean
@@ -216,9 +228,9 @@
   }
 
   function xterm256ToHex(index: number): string {
-    if (index < 0) return '#d7e3ff'
-    if (index < 8) return BASIC_COLORS[index] ?? '#d7e3ff'
-    if (index < 16) return BRIGHT_COLORS[index - 8] ?? '#d7e3ff'
+    if (index < 0) return DEFAULT_TEXT_COLOR
+    if (index < 8) return BASIC_COLORS[index] ?? DEFAULT_TEXT_COLOR
+    if (index < 16) return BRIGHT_COLORS[index - 8] ?? DEFAULT_TEXT_COLOR
     if (index < 232) {
       const value = index - 16
       const r = Math.floor(value / 36)
@@ -231,7 +243,7 @@
       const gray = 8 + (index - 232) * 10
       return rgbToHex(gray, gray, gray)
     }
-    return '#d7e3ff'
+    return DEFAULT_TEXT_COLOR
   }
 
   function rgbToHex(r: number, g: number, b: number): string {
@@ -251,11 +263,7 @@
 
 <template>
   <section class="panel command-output">
-    <div class="title-row">
-      <h3 class="title-row__heading">
-        <Icon icon="solar:terminal-bold-duotone" />
-        <span>Command Output</span>
-      </h3>
+    <PanelHeader icon="solar:terminal-bold-duotone" title="Command Output">
       <button
         class="btn btn--ghost btn--tiny"
         type="button"
@@ -265,7 +273,7 @@
         <Icon icon="solar:trash-bin-trash-bold-duotone" />
         <span>Clear</span>
       </button>
-    </div>
+    </PanelHeader>
 
     <div v-if="props.entries.length === 0" class="command-output__empty muted">
       No commands have been run yet.
@@ -284,14 +292,13 @@
         <header class="command-entry__head">
           <div class="command-entry__title">
             <strong>{{ entry.label }}</strong>
-            <span class="badge">{{ formatTimestamp(entry.createdAt) }}</span>
+            <IconBadge>{{ formatTimestamp(entry.createdAt) }}</IconBadge>
           </div>
-          <span
-            class="badge"
-            :class="entry.exitCode === 0 ? 'badge--success' : 'badge--danger'"
+          <IconBadge
+            :tone="entry.exitCode === 0 ? 'success' : 'danger'"
           >
             exit {{ entry.exitCode }}
-          </span>
+          </IconBadge>
         </header>
         <p class="command-entry__cmd">{{ entry.command }}</p>
         <pre
@@ -328,13 +335,13 @@
     border: 1px solid $line-soft
     border-radius: 12px
     padding: 10px
-    background: rgba(255, 255, 255, 0.02)
+    background: $surface-overlay-soft
 
   .command-entry--ok
-    border-color: rgba(88, 231, 168, 0.32)
+    border-color: $line-success-strong
 
   .command-entry--error
-    border-color: rgba(255, 127, 158, 0.35)
+    border-color: $line-danger
 
   .command-entry__head
     display: flex
@@ -359,17 +366,17 @@
     font-family: $mono-font
     font-size: 0.8rem
     color: $text-secondary
-    background: rgba(8, 14, 26, 0.9)
-    border: 1px solid rgba(178, 196, 255, 0.14)
+    background: $surface-command
+    border: 1px solid $line-muted
 
   .command-entry__body
     max-height: 180px
     overflow: auto
     padding: 10px
     border-radius: 8px
-    background: rgba(4, 7, 14, 0.9)
-    border: 1px solid rgba(178, 196, 255, 0.12)
-    color: #d7e3ff
+    background: $surface-terminal
+    border: 1px solid $line-subtle
+    color: $text-command
 
   .command-entry__body code
     font-family: $mono-font

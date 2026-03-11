@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
 
+  import { pathLeaf } from '@/utils/path'
   import type { ProjectRecord } from '@/types'
 
   const props = defineProps<{
@@ -17,11 +18,6 @@
     (event: 'change-section', section: 'projects' | 'registry'): void
   }>()
 
-  function displayName(path: string): string {
-    const normalized = path.replace(/\\/g, '/')
-    const parts = normalized.split('/').filter(Boolean)
-    return parts[parts.length - 1] ?? path
-  }
 </script>
 
 <template>
@@ -91,7 +87,7 @@
           <span class="project-item__main">
             <Icon icon="solar:folder-with-files-bold-duotone" />
             <span class="project-item__name">{{
-              displayName(project.path)
+              pathLeaf(project.path, project.path)
             }}</span>
           </span>
 
@@ -162,8 +158,8 @@
     place-items: center
     border-radius: 10px
     color: $accent
-    background: rgb(181 112 255 / 0.16)
-    border: 1px solid rgb(164 112 255 / 0.24)
+    background: $accent-bg-logo
+    border: 1px solid $accent-bg-strong
 
     img
       width: 24px
@@ -188,8 +184,8 @@
     gap: 8px
 
   .section-tab
-    border: 1px solid rgba(178, 196, 255, 0.18)
-    background: rgba(255, 255, 255, 0.03)
+    border: 1px solid $line-white-soft
+    background: $surface-overlay
     color: $text-secondary
     min-height: 32px
     border-radius: $radius-md
@@ -200,12 +196,12 @@
     cursor: pointer
     transition: 0.18s ease
     &:hover
-      border-color: rgba(178, 196, 255, 0.35)
+      border-color: $line-card-strong
 
   .section-tab--active
     color: $text-primary
-    border-color: rgb(160 112 255 / 0.45)
-    background: rgb(164 112 255 / 0.2)
+    border-color: $accent-border
+    background: $accent-bg
 
   .sidebar__list
     padding: 0.75rem
@@ -227,16 +223,16 @@
     transition: 0.2s ease
 
     &:hover
-      background: rgba(255, 255, 255, 0.04)
-      border-color: rgba(178, 196, 255, 0.14)
+      background: $surface-overlay-strong
+      border-color: $line-muted
 
     &:hover .project-item__remove
       opacity: 1
 
   .project-item--active
     color: $text-primary
-    border-color: rgb(153 113 255 / 0.4)
-    background: linear-gradient(180deg, rgb(160 112 255 / 0.24), rgb(109 63 189 / 0.2))
+    border-color: $accent-border-soft
+    background: linear-gradient(180deg, $accent-gradient-item-start, $accent-gradient-item-end)
 
   .project-item__main
     display: inline-flex
@@ -257,8 +253,8 @@
     display: flex
     justify-content: center
     align-items: center
-    background: rgba(255, 122, 157, 0.2)
-    color: #ffc5d6
+    background: $danger-bg
+    color: $text-danger-muted
     opacity: 0.1
     cursor: pointer
     transition: 0.2s ease
@@ -274,9 +270,9 @@
     justify-content: center
     align-items: center
     color: $text-muted
-    border: 1px dashed rgba(178, 196, 255, 0.2)
+    border: 1px dashed $line-card-dashed
     border-radius: $radius-md
-    background: rgba(255, 255, 255, 0.02)
+    background: $surface-overlay-soft
 
     svg
       width: 4rem

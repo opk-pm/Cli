@@ -2,6 +2,7 @@
   import { Icon } from '@iconify/vue'
   import { computed } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
   import type { ProjectInfo } from '@/types'
 
   const props = defineProps<{
@@ -29,35 +30,32 @@
       <span class="status-bar__name">
         {{ props.info?.name ?? 'No project selected' }}
       </span>
-      <span v-if="props.info?.version" class="badge"
-        >v{{ props.info.version }}</span
-      >
+      <IconBadge v-if="props.info?.version">v{{ props.info.version }}</IconBadge>
     </div>
 
     <div class="status-bar__meta">
-      <span class="badge">
-        <Icon icon="solar:cpu-bolt-bold-duotone" />
+      <IconBadge icon="solar:cpu-bolt-bold-duotone">
         {{ props.info?.packageManager ?? 'Unknown PM' }}
-      </span>
-      <span class="badge">
-        <Icon icon="solar:box-bold-duotone" />
+      </IconBadge>
+      <IconBadge icon="solar:box-bold-duotone">
         {{ totalDependencies }} deps
-      </span>
-      <span class="badge">
-        <Icon icon="solar:filter-bold-duotone" />
+      </IconBadge>
+      <IconBadge icon="solar:filter-bold-duotone">
         {{ props.info?.altPms.length ?? 0 }} alt PMs
-      </span>
-      <span
-        class="badge"
-        :class="{ 'badge--warning': (props.info?.lockfiles.length ?? 0) === 0 }"
+      </IconBadge>
+      <IconBadge
+        icon="solar:lock-keyhole-bold-duotone"
+        :tone="(props.info?.lockfiles.length ?? 0) === 0 ? 'warning' : 'default'"
       >
-        <Icon icon="solar:lock-keyhole-bold-duotone" />
         {{ props.info?.lockfiles.length ?? 0 }} lockfiles
-      </span>
-      <span v-if="props.loading" class="badge badge--success">
-        <Icon icon="solar:refresh-bold-duotone" />
+      </IconBadge>
+      <IconBadge
+        v-if="props.loading"
+        icon="solar:refresh-bold-duotone"
+        tone="success"
+      >
         Syncing view
-      </span>
+      </IconBadge>
     </div>
   </header>
 </template>
@@ -74,7 +72,7 @@
     align-items: center
     gap: 10px
     padding: 10px 16px
-    background: rgba(10, 16, 28, 0.82)
+    background: $surface-status
     backdrop-filter: blur(8px)
 
   .status-bar__project

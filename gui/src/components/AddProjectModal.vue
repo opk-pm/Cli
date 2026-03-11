@@ -2,6 +2,7 @@
   import { Icon } from '@iconify/vue'
   import { computed, ref, watch } from 'vue'
 
+  import IconBadge from '@/components/base/IconBadge.vue'
   import { addProject, getQuickLocations, listFolders } from '@/services/api'
   import type { FsEntry, ProjectRecord, QuickLocation, TreeNode } from '@/types'
 
@@ -180,9 +181,9 @@
         </div>
 
         <footer class="modal-panel__footer">
-          <span v-if="errorMessage" class="badge badge--danger">{{
+          <IconBadge v-if="errorMessage" tone="danger">{{
             errorMessage
-          }}</span>
+          }}</IconBadge>
           <span v-else class="muted"
             >Choose any folder to manage with Opk GUI.</span
           >
@@ -214,7 +215,7 @@
     position: fixed
     inset: 0
     z-index: 1000
-    background: rgba(4, 7, 14, 0.7)
+    background: $surface-modal-backdrop
     display: grid
     place-items: center
     padding: 20px
@@ -273,11 +274,11 @@
     cursor: pointer
     text-align: left
     &:hover
-      background: rgba(255, 255, 255, 0.04)
+      background: $surface-overlay-strong
     &--active
-      border-color: rgb(160 112 255 / 0.4)
+      border-color: $accent-border-soft
       color: $text-primary
-      background: rgb(164 112 255 / 0.16)
+      background: $accent-bg-soft
 
   .modal-panel__tree
     min-width: 0
@@ -291,7 +292,7 @@
     font-size: 0.82rem
     border: 1px solid $line-soft
     border-radius: 8px
-    background: rgba(255, 255, 255, 0.03)
+    background: $surface-overlay
     min-height: 34px
     display: flex
     align-items: center
@@ -307,7 +308,7 @@
     border: 1px solid $line-soft
     border-radius: 12px
     padding: 8px
-    background: rgba(7, 12, 22, 0.85)
+    background: $surface-tree
 
   .tree-root
     margin: 0

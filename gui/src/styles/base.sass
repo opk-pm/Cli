@@ -1,6 +1,39 @@
 @use './tokens' as *
 @use './mixins' as *
 
+:root
+  --theme-text-command: #{$text-command}
+  --theme-text-tooltip: #{$text-tooltip}
+  --theme-line-tooltip: #{$line-tooltip}
+  --theme-line-white-soft: #{$line-white-soft}
+  --theme-line-white-strong: #{$line-white-strong}
+  --theme-surface-tooltip: #{$surface-tooltip}
+  --ansi-basic-0: #{$ansi-basic-0}
+  --ansi-basic-1: #{$ansi-basic-1}
+  --ansi-basic-2: #{$ansi-basic-2}
+  --ansi-basic-3: #{$ansi-basic-3}
+  --ansi-basic-4: #{$ansi-basic-4}
+  --ansi-basic-5: #{$ansi-basic-5}
+  --ansi-basic-6: #{$ansi-basic-6}
+  --ansi-basic-7: #{$ansi-basic-7}
+  --ansi-bright-0: #{$ansi-bright-0}
+  --ansi-bright-1: #{$ansi-bright-1}
+  --ansi-bright-2: #{$ansi-bright-2}
+  --ansi-bright-3: #{$ansi-bright-3}
+  --ansi-bright-4: #{$ansi-bright-4}
+  --ansi-bright-5: #{$ansi-bright-5}
+  --ansi-bright-6: #{$ansi-bright-6}
+  --ansi-bright-7: #{$ansi-bright-7}
+  --graph-node-root: #{$graph-node-root}
+  --graph-node-0: #{$graph-node-0}
+  --graph-node-1: #{$graph-node-1}
+  --graph-node-2: #{$graph-node-2}
+  --graph-node-3: #{$graph-node-3}
+  --graph-node-4: #{$graph-node-4}
+  --graph-node-5: #{$graph-node-5}
+  --graph-node-6: #{$graph-node-6}
+  --graph-node-7: #{$graph-node-7}
+
 *
   box-sizing: border-box
 
@@ -16,7 +49,7 @@ html
 
 body
   font-family: $global-font
-  background: radial-gradient(circle at 20% 10%, #2f1c5f 0%, $bg-base 34%, #09050d 100%)
+  background: radial-gradient(circle at 20% 10%, $bg-base-glow 0%, $bg-base 34%, $bg-base-outer 100%)
   color: $text-primary
   overflow: hidden
 
