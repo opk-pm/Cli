@@ -102,9 +102,9 @@ function hasTypesInExports(value: unknown): boolean {
 function hasBundledTypes(manifest: PackageManifestLike): boolean {
   return Boolean(
     manifest.types ||
-      manifest.typings ||
-      manifest.typesVersions ||
-      hasTypesInExports(manifest.exports)
+    manifest.typings ||
+    manifest.typesVersions ||
+    hasTypesInExports(manifest.exports)
   )
 }
 
@@ -342,7 +342,9 @@ async function printLocalInfo(data: Record<string, unknown>): Promise<void> {
   if (description) console.log(description)
   if (link) console.log(paint(String(link), C.purple))
   if (npmxLink) console.log(paint(npmxLink, C.purple))
-  console.log(`${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`)
+  console.log(
+    `${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`
+  )
   console.log(`${paint('module:', C.purple)} ${moduleSystem}`)
   if (keywords.length > 0) {
     console.log(`${paint('keywords:', C.purple)} ${keywords.join(', ')}`)
@@ -378,7 +380,9 @@ async function printRemoteInfo(data: NpmInfo): Promise<void> {
   if (description) console.log(description)
   if (link) console.log(paint(link, C.purple))
   console.log(paint(npmxLink, C.purple))
-  console.log(`${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`)
+  console.log(
+    `${paint('types:', C.purple)} ${formatTypesSupport(typesSupport)}`
+  )
   console.log(`${paint('module:', C.purple)} ${moduleSystem}`)
   if (keywords.length > 0) {
     console.log(`${paint('keywords:', C.purple)} ${keywords.join(', ')}`)

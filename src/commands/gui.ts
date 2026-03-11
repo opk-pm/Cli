@@ -1,10 +1,10 @@
-import {spawn} from 'node:child_process'
-import {mkdir, readdir, readFile, stat, writeFile} from 'node:fs/promises'
-import {homedir} from 'node:os'
-import {basename, dirname, extname, resolve, sep} from 'node:path'
-import {fileURLToPath} from 'node:url'
+import { spawn } from 'node:child_process'
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { basename, dirname, extname, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import {C, paint} from '@/ui/colors'
+import { C, paint } from '@/ui/colors'
 
 const DEFAULT_PORT = 1561
 const PROJECT_STORE_PATH = resolve(homedir(), '.opk', 'gui-projects.json')

@@ -20,7 +20,11 @@ interface RegistryInfo {
 
 interface DependencyRow {
   name: string
-  section: 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies'
+  section:
+    | 'dependencies'
+    | 'devDependencies'
+    | 'peerDependencies'
+    | 'optionalDependencies'
   declared: string
   current: string | null
   latest: string | null

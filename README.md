@@ -1,9 +1,11 @@
-## Opk CLI
+## Opk CLI and GUI
 
-**Opk** is a unified package management workflow that sits on top of existing ecosystems like npm, Bun, pnpm, Yarn, and Deno.
+![Opk GUI](/images/gui.png)
+
+**Opk** is a beautiful, unified package management workflow that sits on top of existing ecosystems like npm, Bun, pnpm, Yarn, and Deno.
 It provides a consistent interface for installing, managing, and orchestrating dependencies across different runtimes and environments.
 
-Rather than replacing existing package managers, Opk acts as a meta layer that standardizes tooling, simplifies configuration, and enables reproducible, cross-manager workflows.
+Rather than replacing existing package managers, Opk acts as a meta-layer that standardizes tooling, simplifies configuration, and enables reproducible, cross-manager workflows.
 It focuses on developer experience, deterministic installs, and ecosystem interoperability.
 
 ### Key Goals
@@ -14,8 +16,9 @@ It focuses on developer experience, deterministic installs, and ecosystem intero
   - NEW in 0.5: Keep multiple package managers in sync
 - Type-safe configuration and extensibility
 - Reproducible and deterministic environments
+- Build the best GUI for package management
 
-Opk enables developers to manage packages once and run them anywhere.
+Opk enables developers to manage their packages at once and run them anywhere.
 
 ## Installation
 
@@ -26,6 +29,8 @@ npm i -g opk-pm
 ```
 
 ## Commands
+
+![Opk CLI](/images/cli.png)
 
 #### Package Management:
 

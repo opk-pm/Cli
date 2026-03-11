@@ -264,7 +264,9 @@ async function handleProjectInfo(url: URL, res: ServerResponse): Promise<void> {
   const dependencies = normalizeRecord(packageJson?.dependencies)
   const devDependencies = normalizeRecord(packageJson?.devDependencies)
   const peerDependencies = normalizeRecord(packageJson?.peerDependencies)
-  const optionalDependencies = normalizeRecord(packageJson?.optionalDependencies)
+  const optionalDependencies = normalizeRecord(
+    packageJson?.optionalDependencies
+  )
   const scriptsRecord = asRecord(packageJson?.scripts)
   const scripts = scriptsRecord ? Object.keys(scriptsRecord) : []
 
