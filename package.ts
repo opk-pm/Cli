@@ -24,7 +24,7 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
 export const CmdName: string = 'opk'
 
 export const WhatsNew: string = `
-Opk 0.6 (BETA) introduces the all-new Opk Gui!
+Opk 0.6 introduces the all-new Opk Gui!
 The Opk gui allows you to manage your projects, see dependencies visually, and find packages.
 This feature is experimental! Try with the opk gui command.
 
@@ -36,7 +36,7 @@ export default definePackage({
   altPms: [ NodePm ],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.6.0-rc1',
+  version: '0.6.0',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
   homepage: 'https://opk.a35.dev/',

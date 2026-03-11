@@ -55,7 +55,7 @@ export default definePackage({
   license: '${escapeSingleQuotes(answers.license)}',
   type: '${answers.moduleType}',
   dependencies: {
-    '@opk/ts-pkg': '^0.5.0',
+    '@opk/ts-pkg': '^0.6.1',
   },
   private: false,
 })
