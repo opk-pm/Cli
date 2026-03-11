@@ -126,7 +126,7 @@ async function handleApi(
       await handleRegistryPackages(url, res)
       return
     case 'POST /api/opk/run':
-      await handleRunOpk(req, res, options)
+      await handleRunOpk(req, res, options, url)
       return
     default:
       next()
@@ -348,7 +348,8 @@ async function handleRegistryPackages(
 async function handleRunOpk(
   req: IncomingMessage,
   res: ServerResponse,
-  options: ApiOptions
+  options: ApiOptions,
+  url: URL
 ): Promise<void> {
   const body = await readJsonBody(req)
   const projectPath = await parseDirectoryInput(body.path, 'path')
@@ -359,6 +360,13 @@ async function handleRunOpk(
 
   const stdin = asString(body.stdin) ?? ''
   const cliEntry = await resolveCliEntry(options.repoRoot)
+  const useStreaming = url.searchParams.get('stream') === '1'
+
+  if (useStreaming) {
+    await streamOpk(req, res, cliEntry, projectPath, args, stdin)
+    return
+  }
+
   const { command, exitCode, stdout, stderr } = await runOpk(
     cliEntry,
     projectPath,
@@ -542,6 +550,88 @@ async function buildDependencyGraph(
     nodes: Array.from(nodes.values()),
     edges,
   }
+}
+
+async function streamOpk(
+  req: IncomingMessage,
+  res: ServerResponse,
+  cliEntry: string,
+  cwd: string,
+  args: string[],
+  stdin: string
+): Promise<void> {
+  const commandArgs = [ 'run', cliEntry, ...args ]
+  const command = `bun ${commandArgs.join(' ')}`
+  const createdAt = new Date().toISOString()
+
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+
+  await new Promise<void>(resolvePromise => {
+    const child = spawn('bun', commandArgs, {
+      cwd,
+      env: process.env,
+      stdio: [ 'pipe', 'pipe', 'pipe' ],
+    })
+
+    let ended = false
+    const writeEvent = (payload: Record<string, unknown>): void => {
+      if (ended || res.writableEnded || res.destroyed) return
+      res.write(`${JSON.stringify(payload)}\n`)
+    }
+    const finish = (exitCode: number, errorMessage?: string): void => {
+      if (ended) return
+      if (errorMessage) {
+        writeEvent({ type: 'error', message: errorMessage })
+      }
+      writeEvent({ type: 'exit', exitCode })
+      ended = true
+      if (!res.writableEnded && !res.destroyed) {
+        res.end()
+      }
+      resolvePromise()
+    }
+
+    writeEvent({
+      type: 'meta',
+      args,
+      command,
+      createdAt,
+    })
+
+    child.stdout.on('data', chunk => {
+      writeEvent({ type: 'stdout', chunk: String(chunk) })
+    })
+    child.stderr.on('data', chunk => {
+      writeEvent({ type: 'stderr', chunk: String(chunk) })
+    })
+
+    child.on('error', error => {
+      finish(1, `Failed to start command: ${error.message}`)
+    })
+
+    child.on('close', exitCode => {
+      finish(exitCode ?? 1)
+    })
+
+    req.on('close', () => {
+      if (ended || child.killed) return
+      child.kill('SIGTERM')
+    })
+
+    try {
+      if (stdin) {
+        child.stdin.write(stdin)
+      }
+      child.stdin.end()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      finish(1, `Failed to stream command: ${message}`)
+    }
+  })
 }
 
 function walkPackageLockDeps(

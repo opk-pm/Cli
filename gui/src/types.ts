@@ -58,6 +58,22 @@ export interface PackageSection {
   entries: PackageEntry[]
 }
 
+export type DependencySection = PackageSection['section']
+export type DependencyDropScope = 'deps' | 'dev' | 'peer'
+
+export interface DraggedDependency {
+  name: string
+  version: string
+  section: DependencySection
+  sourceProjectPath: string
+}
+
+export interface DependencyTransferRequest {
+  dependency: DraggedDependency
+  targetProjectPath: string
+  targetScope: DependencyDropScope
+}
+
 export interface GraphNode {
   id: string
   label: string
@@ -92,9 +108,11 @@ export interface CommandResult {
   id: string
   args: string[]
   command: string
-  exitCode: number
+  exitCode: number | null
   stdout: string
   stderr: string
+  output: string
+  running: boolean
   createdAt: string
   label: string
 }

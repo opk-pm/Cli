@@ -10,6 +10,7 @@
 
   import AddProjectModal from '@/components/AddProjectModal.vue'
   import CommandOutput from '@/components/CommandOutput.vue'
+  import DependencyTransferModal from '@/components/DependencyTransferModal.vue'
   import DependencyGraphTab from '@/components/DependencyGraphTab.vue'
   import EmptyState from '@/components/EmptyState.vue'
   import NavigationTabs, {
@@ -28,12 +29,15 @@
     getProjectPackages,
     getProjects,
     removeProject,
-    runOpkCommand,
+    runOpkCommandStream,
   } from '@/services/api'
   import type {
     CommandRequest,
     CommandResult,
+    DependencyDropScope,
     DependencyGraph,
+    DependencyTransferRequest,
+    DraggedDependency,
     PackageSection,
     ProjectInfo,
     ProjectRecord,
@@ -52,7 +56,11 @@
   const packageSections = ref<PackageSection[]>([])
   const dependencyGraph = ref<DependencyGraph | null>(null)
   const commandEntries = ref<CommandResult[]>([])
+  const commandControllers = new Map<string, AbortController>()
+  const stopRequestedCommandIds = new Set<string>()
   const showAddModal = ref(false)
+  const draggingDependency = ref<DraggedDependency | null>(null)
+  const pendingDependencyTransfer = ref<DependencyTransferRequest | null>(null)
   const activeTab = ref<TabId>('overview')
   const sidebarSection = ref<SidebarSection>(readPersistedSection())
   const globalError = ref<string | null>(null)
@@ -77,7 +85,6 @@
   const loading = reactive({
     projects: false,
     projectData: false,
-    command: false,
   })
 
   const tabs: NavigationTab[] = [
@@ -101,6 +108,9 @@
       commandEntries.value.length > 0 ||
       (sidebarSection.value === 'registry' && projects.value.length > 0)
   )
+  const hasRunningCommands = computed(() =>
+    commandEntries.value.some(entry => entry.running)
+  )
   const shellStyle = computed(() => ({
     '--sidebar-width': `${sidebarWidth.value}px`,
     '--output-height': `${outputHeight.value}px`,
@@ -120,6 +130,11 @@
     await refreshProjectData()
   })
   onBeforeUnmount(() => {
+    for (const controller of commandControllers.values()) {
+      controller.abort()
+    }
+    commandControllers.clear()
+    stopRequestedCommandIds.clear()
     stopSidebarResize()
     stopOutputResize()
   })
@@ -226,36 +241,150 @@
       globalError.value = 'Select a project first'
       return
     }
-    loading.command = true
     globalError.value = null
 
+    const entryId = crypto.randomUUID()
+    commandEntries.value.push({
+      id: entryId,
+      label: command.label,
+      args: [ ...command.args ],
+      command: `opk ${command.args.join(' ')}`,
+      createdAt: new Date().toISOString(),
+      exitCode: null,
+      stdout: '',
+      stderr: '',
+      output: '',
+      running: true,
+    })
+    const entry = commandEntries.value[commandEntries.value.length - 1]!
+    const controller = new AbortController()
+    commandControllers.set(entryId, controller)
+
     try {
-      const result = await runOpkCommand(targetPath, command)
-      commandEntries.value.push(result)
+      await runOpkCommandStream(targetPath, command, {
+        onMeta: event => {
+          entry.args = [ ...event.args ]
+          entry.command = event.command
+          entry.createdAt = event.createdAt
+        },
+        onStdout: chunk => {
+          entry.stdout += chunk
+          entry.output += chunk
+        },
+        onStderr: chunk => {
+          entry.stderr += chunk
+          entry.output += chunk
+        },
+        onError: message => {
+          globalError.value = message
+          entry.stderr += entry.stderr ? `\n${message}` : message
+          entry.output += entry.output ? `\n${message}` : message
+        },
+        onExit: exitCode => {
+          entry.exitCode = exitCode
+          entry.running = false
+        },
+      }, {
+        signal: controller.signal,
+      })
+    } catch (error) {
+      if (stopRequestedCommandIds.has(entry.id) || isAbortError(error)) {
+        const stopped = '[stopped by user]'
+        entry.exitCode = 130
+        entry.running = false
+        entry.stderr += entry.stderr ? `\n${stopped}` : stopped
+        entry.output += entry.output ? `\n${stopped}` : stopped
+      } else {
+        const message = error instanceof Error ? error.message : String(error)
+        globalError.value = message
+        entry.exitCode = 1
+        entry.running = false
+        entry.stderr += entry.stderr ? `\n${message}` : message
+        entry.output += entry.output ? `\n${message}` : message
+      }
+    }
+
+    commandControllers.delete(entry.id)
+    stopRequestedCommandIds.delete(entry.id)
+
+    if (entry.running) {
+      entry.running = false
+    }
+    if (entry.exitCode === null) {
+      entry.exitCode = 1
+    }
+
+    if (entry.exitCode === 0) {
       await loadProjects(targetPath)
       if (selectedProjectPath.value === targetPath) {
         await refreshProjectData()
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      globalError.value = message
-      commandEntries.value.push({
-        id: crypto.randomUUID(),
-        label: command.label,
-        args: command.args,
-        command: `opk ${command.args.join(' ')}`,
-        createdAt: new Date().toISOString(),
-        exitCode: 1,
-        stdout: '',
-        stderr: message,
-      })
-    } finally {
-      loading.command = false
     }
   }
 
   function clearCommandOutput() {
+    for (const controller of commandControllers.values()) {
+      controller.abort()
+    }
+    commandControllers.clear()
+    stopRequestedCommandIds.clear()
     commandEntries.value = []
+  }
+
+  function stopCommand(entryId: string): void {
+    const controller = commandControllers.get(entryId)
+    if (!controller) return
+    stopRequestedCommandIds.add(entryId)
+    controller.abort()
+  }
+
+  function onDependencyDragStart(dependency: DraggedDependency): void {
+    draggingDependency.value = dependency
+  }
+
+  function onDependencyDragEnd(): void {
+    draggingDependency.value = null
+  }
+
+  function onDependencyDrop(payload: {
+    targetProjectPath: string
+    scope: DependencyDropScope
+  }): void {
+    if (!draggingDependency.value) return
+    pendingDependencyTransfer.value = {
+      dependency: draggingDependency.value,
+      targetProjectPath: payload.targetProjectPath,
+      targetScope: payload.scope,
+    }
+    draggingDependency.value = null
+  }
+
+  function onDependencyTransferModalToggle(value: boolean): void {
+    if (value) return
+    pendingDependencyTransfer.value = null
+  }
+
+  function onConfirmDependencyTransfer(strategy: 'same' | 'latest'): void {
+    const transfer = pendingDependencyTransfer.value
+    if (!transfer) return
+    pendingDependencyTransfer.value = null
+
+    const scopeArgs =
+      transfer.targetScope === 'dev'
+        ? [ '--dev' ]
+        : transfer.targetScope === 'peer'
+          ? [ '--peer' ]
+          : []
+    const spec =
+      strategy === 'same'
+        ? `${transfer.dependency.name}@${transfer.dependency.version}`
+        : transfer.dependency.name
+
+    void runCommand({
+      label: `Transfer ${transfer.dependency.name} (${transfer.targetScope})`,
+      args: [ 'add', spec, ...scopeArgs ],
+      path: transfer.targetProjectPath,
+    })
   }
 
   let detachSidebarResize: (() => void) | null = null
@@ -364,6 +493,10 @@
     const value = window.localStorage.getItem('opk.gui.sidebar-section')
     return value === 'registry' ? 'registry' : 'projects'
   }
+
+  function isAbortError(error: unknown): boolean {
+    return error instanceof Error && error.name === 'AbortError'
+  }
 </script>
 
 <template>
@@ -381,10 +514,12 @@
         :selected-path="selectedProjectPath"
         :active-section="sidebarSection"
         :loading="loading.projects"
+        :dragging-dependency="draggingDependency"
         @select="onSelectProject"
         @add="showAddModal = true"
         @remove="onRemoveProject"
         @change-section="sidebarSection = $event"
+        @drop-dependency="onDependencyDrop"
       />
     </div>
     <button
@@ -398,7 +533,7 @@
       <StatusBar
         :project-path="selectedProjectPath"
         :info="projectInfo"
-        :loading="loading.projectData || loading.command"
+        :loading="loading.projectData || hasRunningCommands"
       />
 
       <section
@@ -420,7 +555,7 @@
           <template v-if="sidebarSection === 'registry'">
             <RegistryTab
               :projects="projects"
-              :busy="loading.command"
+              :busy="false"
               :default-project-path="selectedProjectPath"
               @run="runCommand"
             />
@@ -438,12 +573,12 @@
                 <div class="split-grid">
                   <QuickActions
                     :project-path="selectedProjectPath"
-                    :busy="loading.command"
+                    :busy="false"
                     @run="runCommand"
                   />
                   <ProjectTab
                     :info="projectInfo"
-                    :busy="loading.command"
+                    :busy="false"
                     @run="runCommand"
                   />
                 </div>
@@ -451,13 +586,16 @@
               <PackagesTab
                 v-else-if="activeTab === 'packages'"
                 :packages="packageSections"
-                :busy="loading.command"
+                :busy="false"
+                :source-project-path="selectedProjectPath"
                 @run="runCommand"
+                @dependency-drag-start="onDependencyDragStart"
+                @dependency-drag-end="onDependencyDragEnd"
               />
               <ProjectTab
                 v-else-if="activeTab === 'project'"
                 :info="projectInfo"
-                :busy="loading.command"
+                :busy="false"
                 @run="runCommand"
               />
               <DependencyGraphTab v-else :graph="dependencyGraph" />
@@ -476,11 +614,18 @@
           <CommandOutput
             :entries="commandEntries"
             @clear="clearCommandOutput"
+            @stop="stopCommand"
           />
         </div>
       </section>
     </main>
 
     <AddProjectModal v-model="showAddModal" @added="onProjectAdded" />
+    <DependencyTransferModal
+      :model-value="pendingDependencyTransfer !== null"
+      :transfer="pendingDependencyTransfer"
+      @update:model-value="onDependencyTransferModalToggle"
+      @confirm="onConfirmDependencyTransfer"
+    />
   </div>
 </template>

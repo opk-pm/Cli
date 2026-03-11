@@ -1,14 +1,20 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
+  import { ref } from 'vue'
 
   import { pathLeaf } from '@/utils/path'
-  import type { ProjectRecord } from '@/types'
+  import type {
+    DependencyDropScope,
+    DraggedDependency,
+    ProjectRecord,
+  } from '@/types'
 
   const props = defineProps<{
     projects: ProjectRecord[]
     selectedPath: string | null
     activeSection: 'projects' | 'registry'
     loading: boolean
+    draggingDependency: DraggedDependency | null
   }>()
 
   const emit = defineEmits<{
@@ -16,7 +22,44 @@
     (event: 'add'): void
     (event: 'remove', path: string): void
     (event: 'change-section', section: 'projects' | 'registry'): void
+    (
+      event: 'drop-dependency',
+      payload: {
+        targetProjectPath: string
+        scope: DependencyDropScope
+      }
+    ): void
   }>()
+
+  const hoveredDropProjectPath = ref<string | null>(null)
+
+  function onSelect(path: string): void {
+    if (props.draggingDependency) return
+    emit('select', path)
+  }
+
+  function onProjectDragOver(path: string, event: DragEvent): void {
+    if (!props.draggingDependency || props.activeSection !== 'projects') return
+    event.preventDefault()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy'
+    }
+    hoveredDropProjectPath.value = path
+  }
+
+  function onDependencyDrop(
+    path: string,
+    scope: DependencyDropScope,
+    event: DragEvent
+  ): void {
+    if (!props.draggingDependency) return
+    event.preventDefault()
+    hoveredDropProjectPath.value = null
+    emit('drop-dependency', {
+      targetProjectPath: path,
+      scope,
+    })
+  }
 
 </script>
 
@@ -80,10 +123,49 @@
           class="project-item"
           :class="{
             'project-item--active': project.path === props.selectedPath,
+            'project-item--drop-hover':
+              props.draggingDependency &&
+              hoveredDropProjectPath === project.path,
           }"
-          type="button"
-          @click="emit('select', project.path)"
+          role="button"
+          @click="onSelect(project.path)"
+          @dragover="onProjectDragOver(project.path, $event)"
+          @drop.prevent
         >
+          <div
+            v-if="
+              props.draggingDependency &&
+              hoveredDropProjectPath === project.path &&
+              props.activeSection === 'projects'
+            "
+            class="project-drop-overlay"
+          >
+            <button
+              class="project-drop-overlay__region"
+              type="button"
+              @dragover.prevent="onProjectDragOver(project.path, $event)"
+              @drop="onDependencyDrop(project.path, 'deps', $event)"
+            >
+              DEPS
+            </button>
+            <button
+              class="project-drop-overlay__region"
+              type="button"
+              @dragover.prevent="onProjectDragOver(project.path, $event)"
+              @drop="onDependencyDrop(project.path, 'dev', $event)"
+            >
+              DEV
+            </button>
+            <button
+              class="project-drop-overlay__region"
+              type="button"
+              @dragover.prevent="onProjectDragOver(project.path, $event)"
+              @drop="onDependencyDrop(project.path, 'peer', $event)"
+            >
+              PEER
+            </button>
+          </div>
+
           <span class="project-item__main">
             <Icon icon="solar:folder-with-files-bold-duotone" />
             <span class="project-item__name">{{
@@ -213,9 +295,9 @@
     border-radius: $radius-md
     background: transparent
     color: $text-secondary
-    display: flex
+    display: grid
+    grid-template-columns: minmax(0, 1fr) auto
     align-items: center
-    justify-content: space-between
     gap: 0.5rem
     padding: 0.5rem 0.75rem
     margin-bottom: 0.25rem
@@ -233,6 +315,9 @@
     color: $text-primary
     border-color: $accent-border-soft
     background: linear-gradient(180deg, $accent-gradient-item-start, $accent-gradient-item-end)
+
+  .project-item--drop-hover
+    border-color: $accent-border
 
   .project-item__main
     display: inline-flex
@@ -260,6 +345,31 @@
     transition: 0.2s ease
     &:hover
       opacity: 1
+
+  .project-drop-overlay
+    grid-column: 1 / -1
+    border-radius: 8px
+    border: 1px solid $accent-border
+    background: $accent-bg-soft
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: 4px
+    padding: 4px
+    margin-bottom: 2px
+
+  .project-drop-overlay__region
+    border: 1px solid $line-soft
+    border-radius: 8px
+    background: $surface-overlay-soft
+    color: $text-secondary
+    font-size: 0.72rem
+    letter-spacing: 0.02em
+    cursor: copy
+    transition: 0.15s ease
+    &:hover
+      color: $text-primary
+      border-color: $line-card-strong
+      background: $surface-overlay-strong
 
   .sidebar__empty
     display: flex

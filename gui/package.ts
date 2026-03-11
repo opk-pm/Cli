@@ -5,7 +5,7 @@ export default definePackage({
   altPms: [ NodePm ],
   name: '@opk/gui',
   description: 'The GUI for Opk, the universal package manager for JS/TS.',
-  version: '0.1.0',
+  version: '0.2.0-beta1',
   type: 'module',
   scripts: {
     dev: 'vite --host --port 1562', // default opk port + 1

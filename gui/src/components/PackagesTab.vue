@@ -4,15 +4,23 @@
 
   import IconBadge from '@/components/base/IconBadge.vue'
   import PanelHeader from '@/components/base/PanelHeader.vue'
-  import type { CommandRequest, PackageSection } from '@/types'
+  import type {
+    CommandRequest,
+    DraggedDependency,
+    PackageEntry,
+    PackageSection,
+  } from '@/types'
 
   const props = defineProps<{
     packages: PackageSection[]
     busy: boolean
+    sourceProjectPath: string | null
   }>()
 
   const emit = defineEmits<{
     (event: 'run', command: CommandRequest): void
+    (event: 'dependency-drag-start', dependency: DraggedDependency): void
+    (event: 'dependency-drag-end'): void
   }>()
 
   const search = ref('')
@@ -49,6 +57,34 @@
       args,
     })
     packageInput.value = ''
+  }
+
+  function onDependencyDragStart(
+    event: DragEvent,
+    section: PackageSection['section'],
+    entry: PackageEntry
+  ): void {
+    if (!props.sourceProjectPath) return
+    const dependency: DraggedDependency = {
+      name: entry.name,
+      version: entry.version,
+      section,
+      sourceProjectPath: props.sourceProjectPath,
+    }
+    emit('dependency-drag-start', dependency)
+
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy'
+      event.dataTransfer.setData(
+        'application/x-opk-dependency',
+        JSON.stringify(dependency)
+      )
+      event.dataTransfer.setData('text/plain', `${entry.name}@${entry.version}`)
+    }
+  }
+
+  function onDependencyDragEnd(): void {
+    emit('dependency-drag-end')
   }
 </script>
 
@@ -136,6 +172,11 @@
             <li
               v-for="entry in section.entries"
               :key="`${section.section}:${entry.name}`"
+              class="deps-entry"
+              :class="{ 'deps-entry--draggable': !!props.sourceProjectPath }"
+              :draggable="!!props.sourceProjectPath"
+              @dragstart="onDependencyDragStart($event, section.section, entry)"
+              @dragend="onDependencyDragEnd"
             >
               <span class="deps-name">{{ entry.name }}</span>
               <span class="deps-version">{{ entry.version }}</span>
@@ -191,6 +232,14 @@
       padding: 6px 8px
       border-radius: 8px
       background: $surface-overlay-soft
+
+  .deps-entry--draggable
+    cursor: grab
+    border: 1px solid transparent
+    &:hover
+      border-color: $line-card-strong
+    &:active
+      cursor: grabbing
 
   .deps-name
     color: $text-primary

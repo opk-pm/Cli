@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Icon } from '@iconify/vue'
-  import { computed } from 'vue'
+  import { computed, ref, watch } from 'vue'
 
   import IconBadge from '@/components/base/IconBadge.vue'
   import PanelHeader from '@/components/base/PanelHeader.vue'
@@ -13,9 +13,9 @@
 
   const emit = defineEmits<{
     (event: 'clear'): void
+    (event: 'stop', entryId: string): void
   }>()
 
-  const latestFirst = computed(() => [ ...props.entries ].reverse())
   const BASIC_COLOR_VARS = [
     '--ansi-basic-0',
     '--ansi-basic-1',
@@ -46,6 +46,36 @@
   )
   const DEFAULT_TEXT_COLOR = readThemeColor('--theme-text-command', 'currentColor')
 
+  const activeEntryId = ref<string | null>(null)
+  const tabEntries = computed(() => [ ...props.entries ].reverse())
+  const hasRunningEntries = computed(() =>
+    props.entries.some(entry => entry.running)
+  )
+  const activeEntry = computed(() => {
+    if (props.entries.length === 0) return null
+    if (!activeEntryId.value) return props.entries[props.entries.length - 1] ?? null
+    return props.entries.find(entry => entry.id === activeEntryId.value) ?? null
+  })
+
+  watch(
+    () => props.entries.length,
+    (nextCount, previousCount) => {
+      if (nextCount === 0) {
+        activeEntryId.value = null
+        return
+      }
+      if (nextCount > previousCount) {
+        activeEntryId.value = props.entries[nextCount - 1]?.id ?? null
+        return
+      }
+      const stillExists = props.entries.some(entry => entry.id === activeEntryId.value)
+      if (!stillExists) {
+        activeEntryId.value = props.entries[nextCount - 1]?.id ?? null
+      }
+    },
+    { immediate: true }
+  )
+
   interface AnsiState {
     bold: boolean
     dim: boolean
@@ -53,6 +83,10 @@
     underline: boolean
     foreground: string | null
     background: string | null
+  }
+
+  function selectEntry(id: string): void {
+    activeEntryId.value = id
   }
 
   function formatTimestamp(value: string): string {
@@ -63,8 +97,19 @@
     }
   }
 
+  function statusText(entry: CommandResult): string {
+    if (entry.running) return 'running'
+    return `exit ${entry.exitCode ?? 1}`
+  }
+
+  function statusTone(entry: CommandResult): 'default' | 'success' | 'warning' | 'danger' {
+    if (entry.running) return 'warning'
+    if (entry.exitCode === 0) return 'success'
+    return 'danger'
+  }
+
   function renderOutput(entry: CommandResult): string {
-    const raw = entry.stdout || entry.stderr || '(no output)'
+    const raw = entry.output || entry.stdout || entry.stderr || '(no output)'
     return ansiToHtml(raw)
   }
 
@@ -264,46 +309,78 @@
 <template>
   <section class="panel command-output">
     <PanelHeader icon="solar:terminal-bold-duotone" title="Command Output">
-      <button
-        class="btn btn--ghost btn--tiny"
-        type="button"
-        :disabled="props.entries.length === 0"
-        @click="emit('clear')"
-      >
-        <Icon icon="solar:trash-bin-trash-bold-duotone" />
-        <span>Clear</span>
-      </button>
+      <div class="command-output__actions">
+        <button
+          v-if="activeEntry?.running"
+          class="btn btn--danger btn--tiny"
+          type="button"
+          @click="emit('stop', activeEntry.id)"
+        >
+          <Icon icon="solar:stop-circle-bold-duotone" />
+          <span>Stop</span>
+        </button>
+        <button
+          class="btn btn--ghost btn--tiny"
+          type="button"
+          :disabled="props.entries.length === 0 || hasRunningEntries"
+          @click="emit('clear')"
+        >
+          <Icon icon="solar:trash-bin-trash-bold-duotone" />
+          <span>Clear</span>
+        </button>
+      </div>
     </PanelHeader>
 
     <div v-if="props.entries.length === 0" class="command-output__empty muted">
       No commands have been run yet.
     </div>
 
-    <div v-else class="command-output__list scroll-area">
+    <div v-else class="command-output__content">
+      <div class="command-tabs scroll-area">
+        <button
+          v-for="entry in tabEntries"
+          :key="entry.id"
+          class="command-tab"
+          :class="{ 'command-tab--active': entry.id === activeEntryId }"
+          type="button"
+          @click="selectEntry(entry.id)"
+        >
+          <Icon
+            v-if="entry.running"
+            icon="solar:refresh-bold-duotone"
+            class="command-tab__spin"
+          />
+          <span class="command-tab__label">{{ entry.label }}</span>
+          <span
+            class="command-tab__status"
+            :class="{
+              'command-tab__status--ok': !entry.running && entry.exitCode === 0,
+              'command-tab__status--error': !entry.running && entry.exitCode !== 0,
+            }"
+          />
+        </button>
+      </div>
+
       <article
-        v-for="entry in latestFirst"
-        :key="entry.id"
+        v-if="activeEntry"
         class="command-entry"
         :class="{
-          'command-entry--error': entry.exitCode !== 0,
-          'command-entry--ok': entry.exitCode === 0,
+          'command-entry--running': activeEntry.running,
+          'command-entry--error': !activeEntry.running && activeEntry.exitCode !== 0,
+          'command-entry--ok': !activeEntry.running && activeEntry.exitCode === 0,
         }"
       >
         <header class="command-entry__head">
           <div class="command-entry__title">
-            <strong>{{ entry.label }}</strong>
-            <IconBadge>{{ formatTimestamp(entry.createdAt) }}</IconBadge>
+            <strong>{{ activeEntry.label }}</strong>
+            <IconBadge>{{ formatTimestamp(activeEntry.createdAt) }}</IconBadge>
           </div>
-          <IconBadge
-            :tone="entry.exitCode === 0 ? 'success' : 'danger'"
-          >
-            exit {{ entry.exitCode }}
+          <IconBadge :tone="statusTone(activeEntry)">
+            {{ statusText(activeEntry) }}
           </IconBadge>
         </header>
-        <p class="command-entry__cmd">{{ entry.command }}</p>
-        <pre
-          class="command-entry__body"
-        ><code v-html="renderOutput(entry)" /></pre>
+        <p class="command-entry__cmd">{{ activeEntry.command }}</p>
+        <pre class="command-entry__body"><code v-html="renderOutput(activeEntry)" /></pre>
       </article>
     </div>
   </section>
@@ -325,17 +402,78 @@
     display: grid
     place-items: center
 
-  .command-output__list
+  .command-output__content
     min-height: 0
     display: grid
-    gap: 10px
-    padding-right: 2px
+    grid-template-rows: auto minmax(0, 1fr)
+    gap: 8px
+
+  .command-output__actions
+    display: inline-flex
+    gap: 8px
+
+  .command-tabs
+    min-height: 0
+    display: flex
+    gap: 6px
+    overflow-x: auto
+    padding-bottom: 2px
+
+  .command-tab
+    border: 1px solid $line-soft
+    background: $surface-overlay-soft
+    color: $text-secondary
+    border-radius: $radius-sm
+    min-height: 34px
+    padding: 0 10px
+    display: inline-flex
+    align-items: center
+    gap: 8px
+    cursor: pointer
+    transition: 0.2s ease
+    min-width: 0
+    &:hover
+      border-color: $line-card-strong
+      color: $text-primary
+
+  .command-tab--active
+    border-color: $accent-border-soft
+    background: $accent-bg-soft
+    color: $text-primary
+
+  .command-tab__spin
+    animation: spin 1s linear infinite
+
+  .command-tab__label
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
+    max-width: 220px
+
+  .command-tab__status
+    width: 8px
+    height: 8px
+    border-radius: 99px
+    background: $warning
+    flex: 0 0 auto
+
+  .command-tab__status--ok
+    background: $success
+
+  .command-tab__status--error
+    background: $danger
 
   .command-entry
     border: 1px solid $line-soft
     border-radius: 12px
     padding: 10px
     background: $surface-overlay-soft
+    min-height: 0
+    display: grid
+    grid-template-rows: auto auto minmax(0, 1fr)
+
+  .command-entry--running
+    border-color: $line-warning
 
   .command-entry--ok
     border-color: $line-success-strong
@@ -370,7 +508,7 @@
     border: 1px solid $line-muted
 
   .command-entry__body
-    max-height: 180px
+    min-height: 0
     overflow: auto
     padding: 10px
     border-radius: 8px
@@ -381,4 +519,8 @@
   .command-entry__body code
     font-family: $mono-font
     font-size: 0.83rem
+
+  @keyframes spin
+    to
+      transform: rotate(360deg)
 </style>

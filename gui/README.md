@@ -11,6 +11,8 @@ A Vue + Vite + TypeScript + Sass interface for the Opk CLI.
 - Quick actions wired to Opk CLI (`init`, `migrate`, `install`, `update`, `list`, `outdated`, etc.)
 - Project scripts can be launched directly from the Project tab
 - Registry results include both `add` and `info` actions for selected projects
+- Dependency transfer supports drag-from-Packages to Projects with DEPS/DEV/PEER drop zones and version strategy selection
+- Command output supports concurrent long-running sessions (e.g. `vite`) with per-command tabs and live streaming output
 - Lockfile-aware dependency graph view (`package-lock.json` and `bun.lock`, with package.json fallback)
 
 ## Run

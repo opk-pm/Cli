@@ -1,6 +1,6 @@
 {
   "name": "@opk/gui",
-  "version": "0.1.0",
+  "version": "0.2.0-beta1",
   "description": "The GUI for Opk, the universal package manager for JS/TS.",
   "type": "module",
   "scripts": {

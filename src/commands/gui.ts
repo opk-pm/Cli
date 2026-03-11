@@ -71,9 +71,10 @@ export async function runGui(args: string[]): Promise<void> {
 
   Bun.serve({
     port,
-    fetch: async request => {
+    fetch: async (request, server) => {
       const url = new URL(request.url)
       if (url.pathname.startsWith('/api/')) {
+        server.timeout(request, url.pathname === '/api/opk/run' ? 0 : 60)
         return await handleApiRequest(request, runtime)
       }
 
@@ -338,6 +339,17 @@ async function handleApiRequest(
         }
 
         const stdin = asString(body.stdin) ?? ''
+        const useStreaming = url.searchParams.get('stream') === '1'
+        if (useStreaming) {
+          return runOpkStream(
+            runtime.cliEntry,
+            projectPath,
+            args,
+            stdin,
+            request.signal
+          )
+        }
+
         const result = await runOpk(runtime.cliEntry, projectPath, args, stdin)
         return json(200, {
           result: {
@@ -533,6 +545,102 @@ async function runOpk(
   })
 
   return { ...result, command }
+}
+
+function runOpkStream(
+  cliEntry: string,
+  cwd: string,
+  args: string[],
+  stdin: string,
+  signal: AbortSignal
+): Response {
+  const commandArgs = [ 'run', cliEntry, ...args ]
+  const command = `bun ${commandArgs.join(' ')}`
+  const createdAt = new Date().toISOString()
+  const encoder = new TextEncoder()
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const writeEvent = (payload: Record<string, unknown>): void => {
+        controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`))
+      }
+
+      let child: ReturnType<typeof spawn>
+      try {
+        child = spawn('bun', commandArgs, {
+          cwd,
+          env: process.env,
+          stdio: [ 'pipe', 'pipe', 'pipe' ],
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        writeEvent({ type: 'error', message: `Failed to run opk command: ${message}` })
+        writeEvent({ type: 'exit', exitCode: 1 })
+        controller.close()
+        return
+      }
+      let ended = false
+
+      const finish = (exitCode: number, errorMessage?: string): void => {
+        if (ended) return
+        if (errorMessage) {
+          writeEvent({ type: 'error', message: errorMessage })
+        }
+        writeEvent({ type: 'exit', exitCode })
+        ended = true
+        controller.close()
+      }
+
+      writeEvent({
+        type: 'meta',
+        args,
+        command,
+        createdAt,
+      })
+
+      child.stdout?.on('data', chunk => {
+        if (ended) return
+        writeEvent({ type: 'stdout', chunk: String(chunk) })
+      })
+      child.stderr?.on('data', chunk => {
+        if (ended) return
+        writeEvent({ type: 'stderr', chunk: String(chunk) })
+      })
+      child.on('error', error => {
+        finish(1, `Failed to run opk command: ${error.message}`)
+      })
+      child.on('close', code => {
+        finish(code ?? 1)
+      })
+
+      signal.addEventListener('abort', () => {
+        if (ended || child.killed) return
+        child.kill('SIGTERM')
+      })
+
+      try {
+        if (stdin) {
+          child.stdin?.write(stdin)
+        }
+        child.stdin?.end()
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        finish(1, `Failed to stream command: ${message}`)
+      }
+    },
+    cancel() {
+      // noop
+    },
+  })
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  })
 }
 
 async function fetchRegistryPackages(
