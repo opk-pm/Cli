@@ -24,11 +24,10 @@ $$$$$     $$$$$    $$$$$$$   $$$$$
 export const CmdName: string = 'opk'
 
 export const WhatsNew: string = `
-Opk 0.6 introduces the all-new Opk Gui!
-The Opk gui allows you to manage your projects, see dependencies visually, and find packages.
-This feature is experimental! Try with the opk gui command.
-
-Also in Opk 0.6, you can quickly see outdated packages with opk outdated!
+Opk 0.7 includes major improvements to the Opk GUI.
+∙ You can now run long-running commands within the GUI, just like in your terminal app.
+∙ You can now drag and drop dependencies between projects to install them.
+∙ [TsPkg 0.7] You can now add custom fields, such as build {}, to package.ts.
 `
 
 export default definePackage({
@@ -36,10 +35,10 @@ export default definePackage({
   altPms: [ NodePm ],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
-  version: '0.7.0-beta1',
+  version: '0.7.0-beta2',
   license: 'Apache-2.0',
   repository: 'https://github.com/opk-pm/Cli.git',
-  homepage: 'https://opk.a35.dev/',
+  homepage: 'https://opk.js.org/',
   keywords: [
     'opk',
     'typescript',
@@ -87,7 +86,7 @@ export default definePackage({
     'vue-eslint-parser': '^10.4.0',
   },
   dependencies: {
-    '@opk/ts-pkg': '^0.6.1',
+    '@opk/ts-pkg': '^0.7.0',
   },
 
   engines: {

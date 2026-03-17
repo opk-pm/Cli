@@ -1,6 +1,6 @@
 {
   "name": "opk-pm",
-  "version": "0.7.0-beta1",
+  "version": "0.7.0-beta2",
   "description": "The universal package manager for JS/TS.",
   "keywords": [
     "opk",
@@ -14,7 +14,7 @@
     "monorepo-tooling",
     "nodejs"
   ],
-  "homepage": "https://opk.a35.dev/",
+  "homepage": "https://opk.js.org/",
   "license": "Apache-2.0",
   "repository": "https://github.com/opk-pm/Cli.git",
   "type": "module",
@@ -37,7 +37,7 @@
     "format": "opk run prettier && opk run lint"
   },
   "dependencies": {
-    "@opk/ts-pkg": "^0.6.1"
+    "@opk/ts-pkg": "^0.7.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -5,7 +5,7 @@
     "": {
       "name": "opk",
       "dependencies": {
-        "@opk/ts-pkg": "^0.6.1",
+        "@opk/ts-pkg": "^0.7.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -48,7 +48,7 @@
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
-    "@opk/ts-pkg": ["@opk/ts-pkg@0.6.1", "", { "bin": { "ts-pkg": "dist/cli.js" } }, "sha512-L7zr/gNG3uGMFWmqKpGF1yj220gDUKYXKiThlBOi7KSHLfbU3PcrX9yRSRy6wQbk18TH5HwkdX3bz14wJqw9uA=="],
+    "@opk/ts-pkg": ["@opk/ts-pkg@0.7.0", "", { "bin": { "ts-pkg": "dist/cli.js" } }, "sha512-/2qHXHf39J6Y30rc7RGoL23Qmz/8NGb5W3Fza4FlgofVlBnpkkGtzrh/CFKNEhjr3cpjtw0mdMTXWVaPmkj/Ng=="],
 
     "@rtsao/scc": ["@rtsao/scc@1.1.0", "", {}, "sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g=="],
 
