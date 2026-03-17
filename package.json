@@ -37,7 +37,7 @@
     "format": "opk run prettier && opk run lint"
   },
   "dependencies": {
-    "@opk/ts-pkg": "^0.7.0"
+    "@opk/ts-pkg": "^0.7.1"
   },
   "devDependencies": {
     "@types/bun": "latest",

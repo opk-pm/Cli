@@ -32,7 +32,7 @@ Opk 0.7 includes major improvements to the Opk GUI.
 
 export default definePackage({
   pm: BunPm,
-  altPms: [ NodePm ],
+  altPms: [NodePm],
   name: 'opk-pm',
   description: 'The universal package manager for JS/TS.',
   version: '0.7.0-beta2',
@@ -59,8 +59,8 @@ export default definePackage({
     opk: './dist/cli.js',
     opx: './dist/opx.js',
   },
-  files: [ 'dist' ],
-  scriptPresets: [ 'typescript' ],
+  files: ['dist'],
+  scriptPresets: ['typescript'],
   scripts: {
     // run
     build: 'bun run build.ts',
@@ -86,7 +86,7 @@ export default definePackage({
     'vue-eslint-parser': '^10.4.0',
   },
   dependencies: {
-    '@opk/ts-pkg': '^0.7.0',
+    '@opk/ts-pkg': '^0.7.1',
   },
 
   engines: {
